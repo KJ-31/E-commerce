@@ -1,0 +1,28 @@
+# 개발 환경 전용 설정
+# 이 파일은 개발 시에만 사용되며, 프로덕션에서는 무시됩니다.
+
+version: '3.8'
+services:
+  frontend:
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  backend:
+    environment:
+      - NODE_ENV=development
+      - DEBUG=*
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run start:dev
+
+  postgres:
+    environment:
+      - POSTGRES_LOG_STATEMENT=all
+    volumes:
+      - ./database/init:/docker-entrypoint-initdb.d
