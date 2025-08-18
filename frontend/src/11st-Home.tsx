@@ -140,7 +140,7 @@ function Header({ query, setQuery }: HeaderProps): JSX.Element {
           <div className="flex-1" />
 
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
-            <a className="hover:text-rose-600" href="#">로그인</a>
+            <a className="hover:text-rose-600" href="#" >로그인</a>
             <span className="text-gray-300">|</span>
             <a className="hover:text-rose-600" href="#">회원가입</a>
             <span className="text-gray-300">|</span>
