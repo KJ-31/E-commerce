@@ -24,3 +24,9 @@
     "src"
   ]
 }
+// const fs=require("fs");
+// const j=JSON.parse(fs.readFileSync("tsconfig.json","utf8"));
+// j.compilerOptions ??= {};
+// j.compilerOptions.types = Array.from(new Set([...(j.compilerOptions.types||[]), "vite/client"]));
+// fs.writeFileSync("tsconfig.json", JSON.stringify(j,null,2));
+// console.log("tsconfig.json updated");
