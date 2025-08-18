@@ -18,7 +18,7 @@
   "include": [
     "src",
     "tailwind.config.js"
-  ]
+, "../backend/src/entities", "../backend/src/database", "../backend/src/database"  ]
 }
 // const fs=require("fs");
 // const j=JSON.parse(fs.readFileSync("tsconfig.json","utf8"));
