@@ -124,8 +124,12 @@ function TopNotice(): JSX.Element {
   );
 }
 
-type HeaderProps = { query: string; setQuery: React.Dispatch<React.SetStateAction<string>> };
-function Header({ query, setQuery }: HeaderProps): JSX.Element {
+type HeaderProps = { 
+  query: string; 
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  navigateTo?: (path: string) => void;
+};
+function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element {
   return (
     <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
       <div className="mx-auto max-w-screen-2xl px-4">
@@ -142,7 +146,12 @@ function Header({ query, setQuery }: HeaderProps): JSX.Element {
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
             <a className="hover:text-rose-600" href="#">로그인</a>
             <span className="text-gray-300">|</span>
-            <a className="hover:text-rose-600" href="#">회원가입</a>
+            <button 
+              onClick={() => navigateTo ? navigateTo('/signup') : window.location.href = '/signup'}
+              className="hover:text-rose-600"
+            >
+              회원가입
+            </button>
             <span className="text-gray-300">|</span>
             <a className="hover:text-rose-600" href="#">고객센터</a>
           </div>
@@ -159,6 +168,8 @@ function Header({ query, setQuery }: HeaderProps): JSX.Element {
             aria-label="사이트 검색"
           >
             <input
+              id="search-input"
+              name="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="브랜드, 상품, 카테고리 검색"
@@ -182,7 +193,7 @@ function Header({ query, setQuery }: HeaderProps): JSX.Element {
           <IconBtn label="장바구니">
             <ShoppingCart className="w-5 h-5" />
           </IconBtn>
-          <IconBtn label="마이">
+          <IconBtn label="마이" onClick={() => navigateTo ? navigateTo('/mypage') : window.location.href = '/mypage'}>
             <User className="w-5 h-5" />
           </IconBtn>
         </div>
@@ -499,12 +510,16 @@ function Footer(): JSX.Element {
   );
 }
 
-export default function ElevenStreetHome(): JSX.Element {
+type ElevenStreetHomeProps = {
+  navigateTo?: (path: string) => void;
+};
+
+export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps): React.JSX.Element {
   const [query, setQuery] = useState<string>("");
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-900">
       <TopNotice />
-      <Header query={query} setQuery={setQuery} />
+      <Header query={query} setQuery={setQuery} navigateTo={navigateTo} />
       <main className="space-y-10 md:space-y-14">
         <HeroCarousel />
         <PromoTiles />
