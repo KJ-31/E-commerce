@@ -16,6 +16,11 @@ export class SellerSignUpDto extends SignUpDto {
   companyAddress: string;
 }
 
+export class LoginDto {
+  email: string;
+  password: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -49,6 +54,23 @@ export class AuthController {
     } catch (error) {
       throw new HttpException(
         error.message || '셀러 회원가입에 실패했습니다.',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    try {
+      const result = await this.authService.login(loginDto);
+      return {
+        success: true,
+        message: '로그인이 완료되었습니다.',
+        data: result
+      };
+    } catch (error) {
+      throw new HttpException(
+        error.message || '로그인에 실패했습니다.',
         HttpStatus.BAD_REQUEST
       );
     }

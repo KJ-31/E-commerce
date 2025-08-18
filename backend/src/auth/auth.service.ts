@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Admin } from '../entities/admin.entity';
-import { SignUpDto, SellerSignUpDto } from './auth.controller';
+import { SignUpDto, SellerSignUpDto, LoginDto } from './auth.controller';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -75,5 +75,35 @@ export class AuthService {
     // 비밀번호는 제외하고 반환
     const { admin_pw, ...adminWithoutPassword } = savedAdmin;
     return adminWithoutPassword;
+  }
+
+  async login(loginDto: LoginDto) {
+    // 사용자 테이블에서 먼저 확인
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email }
+    });
+
+    if (user) {
+      const isPasswordValid = await bcrypt.compare(loginDto.password, user.user_pw);
+      if (isPasswordValid) {
+        const { user_pw, ...userWithoutPassword } = user;
+        return { ...userWithoutPassword, userType: 'user' };
+      }
+    }
+
+    // 관리자 테이블에서 확인
+    const admin = await this.adminRepository.findOne({
+      where: { email: loginDto.email }
+    });
+
+    if (admin) {
+      const isPasswordValid = await bcrypt.compare(loginDto.password, admin.admin_pw);
+      if (isPasswordValid) {
+        const { admin_pw, ...adminWithoutPassword } = admin;
+        return { ...adminWithoutPassword, userType: 'admin' };
+      }
+    }
+
+    throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
   }
 }

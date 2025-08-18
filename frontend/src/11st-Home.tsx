@@ -145,7 +145,12 @@ function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element
           <div className="flex-1" />
 
           <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
-            <a className="hover:text-rose-600" href="#">로그인</a>
+            <button 
+              onClick={() => navigateTo ? navigateTo('/login') : window.location.href = '/login'}
+              className="hover:text-rose-600"
+            >
+              로그인
+            </button>
             <span className="text-gray-300">|</span>
             <button 
               onClick={() => navigateTo ? navigateTo('/signup') : window.location.href = '/signup'}

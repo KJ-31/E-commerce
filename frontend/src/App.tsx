@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import ElevenStreetHome from './11st-Home';
 import MyPage from './components/MyPage';
 import SignUp from './components/SignUp';
+import Login from './components/Login';
 import SellerMyPage from './seller_mypage/SellerMyPage'
 
 function App() {
@@ -29,6 +30,8 @@ function App() {
         return <MyPage navigateTo={navigateTo} />;
       case '/signup':
         return <SignUp navigateTo={navigateTo} />;
+      case '/login':
+        return <Login navigateTo={navigateTo} />;
       case '/seller/mypage':  // 추가된 부분
         return <SellerMyPage />;
       default:
