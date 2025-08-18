@@ -52,21 +52,3 @@ export class ProductsController {
     return this.productsService.toggleLike(id);
   }
 }
-
-// src/products/products.module.ts
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductsService } from './products.service';
-import { ProductsController } from './products.controller';
-import { Product } from '../../../backend/src/entities/product.entity';
-import { ProductImage } from '../../../backend/src/entities/product-image.entity';
-import { Review } from '../../../backend/src/entities/review.entity';
-
-@Module({
-  imports: [TypeOrmModule.forFeature([Product, ProductImage, Review])],
-  controllers: [ProductsController],
-  providers: [ProductsService],
-  exports: [ProductsService],
-})
-
-export class ProductsModule {}

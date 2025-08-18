@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from '../../../backend/src/entities/product.entity';
+import { Product } from '../entities/product.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 
 @Injectable()
@@ -86,19 +86,3 @@ export class ProductsService {
     return { products, total };
   }
 }
-
-// src/products/dto/product.dto.ts
-export class CreateProductDto {
-  title: string;
-  price: number;
-  originalPrice?: number;
-  description?: string;
-  brand: string;
-  seller: string;
-  category: string;
-  stock: number;
-  specifications?: Record<string, any>;
-  images?: Array<{ imageUrl: string; order: number; isMain: boolean }>;
-}
-
-export class UpdateProductDto extends CreateProductDto {}
