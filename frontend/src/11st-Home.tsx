@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Link,
   Search,
   ShoppingCart,
   Bell,
@@ -182,9 +183,11 @@ function Header({ query, setQuery }: HeaderProps): JSX.Element {
           <IconBtn label="장바구니">
             <ShoppingCart className="w-5 h-5" />
           </IconBtn>
-          <IconBtn label="마이">
-            <User className="w-5 h-5" />
-          </IconBtn>
+          <Link to="/seller">
+            <IconBtn label="마이">
+              <User className="w-5 h-5" />
+            </IconBtn>
+          </Link>
         </div>
 
         <nav className="relative -mx-4 border-t bg-white">
