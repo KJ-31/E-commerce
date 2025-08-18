@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Link,
   Search,
   ShoppingCart,
   Bell,
@@ -197,7 +198,6 @@ function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element
             <User className="w-5 h-5" />
           </IconBtn>
         </div>
-
         <nav className="relative -mx-4 border-t bg-white">
           <div className="mx-auto max-w-screen-2xl px-4">
             <div className="flex items-center gap-3 overflow-x-auto py-2 no-scrollbar">
