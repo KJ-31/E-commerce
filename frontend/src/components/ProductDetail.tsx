@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Heart, Share2, ChevronLeft, ChevronRight, Star, Truck, ShieldCheck } from 'lucide-react';
+import { Heart, Share2, Star, Truck, ShieldCheck } from 'lucide-react';
 import { productService, Product } from '../services/productService';
 
 const ProductDetail: React.FC = () => {
@@ -8,7 +8,6 @@ const ProductDetail: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
   const [activeTab, setActiveTab] = useState('상품정보');
@@ -21,7 +20,6 @@ const ProductDetail: React.FC = () => {
         const foundProduct = await productService.getProductById(parseInt(id || '0'));
         if (foundProduct) {
           setProduct(foundProduct);
-          setCurrentImageIndex(0); // 새 상품 로드 시 이미지 인덱스 초기화
           setQuantity(1); // 새 상품 로드 시 수량 초기화
           setIsLiked(false); // 새 상품 로드 시 좋아요 상태 초기화
         } else {
@@ -61,22 +59,6 @@ const ProductDetail: React.FC = () => {
       </div>
     );
   }
-
-  const handleImagePrevious = () => {
-    if (product.images) {
-      setCurrentImageIndex(prev =>
-        prev === 0 ? product.images.length - 1 : prev - 1
-      );
-    }
-  };
-
-  const handleImageNext = () => {
-    if (product.images) {
-      setCurrentImageIndex(prev =>
-        prev === product.images.length - 1 ? 0 : prev + 1
-      );
-    }
-  };
 
   const handleQuantityChange = (increment: number) => {
     setQuantity(prev => {
@@ -130,42 +112,11 @@ const ProductDetail: React.FC = () => {
           <div className="relative">
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images?.[currentImageIndex] || 'https://picsum.photos/seed/default/600/600'}
+                src={product.img || 'https://picsum.photos/seed/default/600/600'}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
-              {product.images && product.images.length > 1 && (
-                <>
-                  <button
-                    onClick={handleImagePrevious}
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-                  <button
-                    onClick={handleImageNext}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-                </>
-              )}
             </div>
-            {product.images && product.images.length > 1 && (
-              <div className="flex space-x-2 mt-4">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`w-16 h-16 rounded border-2 overflow-hidden ${
-                      currentImageIndex === index ? 'border-red-500' : 'border-gray-200'
-                    }`}
-                  >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 

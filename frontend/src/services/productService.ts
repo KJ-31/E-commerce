@@ -16,7 +16,7 @@ export interface Product {
   reviewCount?: number; // product.reviewCount
   likeCount?: number; // product.likeCount
   stock?: number; // product.stock
-  images: string[]; // product.images
+  // images: string[]; // product.images (제거)
   specifications?: { [key: string]: string }; // product.specifications
   seller?: string; // product.seller
   freeShipping?: boolean; // product.freeShipping
