@@ -123,9 +123,10 @@ const ProductDetail: React.FC = () => {
         {/* 상품 정보 섹션 */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-xl font-medium text-gray-800 mb-4">
+            <h1 className="text-xl font-medium text-gray-800 mb-2">
               {product.title}
             </h1>
+            <p className="text-5xl font-bold text-gray-800 mb-4">{product.name}</p>
 
             <div className="flex items-center space-x-4 mb-4">
               <div className="flex items-center">
