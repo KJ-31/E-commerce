@@ -1,25 +1,5 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
-import { AuthService } from './auth.service';
-
-export class SignUpDto {
-  email: string;
-  password: string;
-  name: string;
-  phone: string;
-  address: string;
-}
-
-export class SellerSignUpDto extends SignUpDto {
-  companyName: string;
-  businessNumber: string;
-  companyPhone: string;
-  companyAddress: string;
-}
-
-export class LoginDto {
-  email: string;
-  password: string;
-}
+import { Controller, Post, Body } from '@nestjs/common';
+import { AuthService, SignUpDto, SellerSignUpDto, LoginDto } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
@@ -27,52 +7,16 @@ export class AuthController {
 
   @Post('signup')
   async signUp(@Body() signUpDto: SignUpDto) {
-    try {
-      const result = await this.authService.signUp(signUpDto);
-      return {
-        success: true,
-        message: '회원가입이 완료되었습니다.',
-        data: result
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || '회원가입에 실패했습니다.',
-        HttpStatus.BAD_REQUEST
-      );
-    }
+    return await this.authService.signUp(signUpDto);
   }
 
   @Post('seller-signup')
   async sellerSignUp(@Body() sellerSignUpDto: SellerSignUpDto) {
-    try {
-      const result = await this.authService.sellerSignUp(sellerSignUpDto);
-      return {
-        success: true,
-        message: '셀러 회원가입이 완료되었습니다.',
-        data: result
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || '셀러 회원가입에 실패했습니다.',
-        HttpStatus.BAD_REQUEST
-      );
-    }
+    return await this.authService.sellerSignUp(sellerSignUpDto);
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    try {
-      const result = await this.authService.login(loginDto);
-      return {
-        success: true,
-        message: '로그인이 완료되었습니다.',
-        data: result
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || '로그인에 실패했습니다.',
-        HttpStatus.BAD_REQUEST
-      );
-    }
+    return await this.authService.login(loginDto);
   }
 }
