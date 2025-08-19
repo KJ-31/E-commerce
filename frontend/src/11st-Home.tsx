@@ -205,11 +205,15 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
             <div className="flex items-center gap-2">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Heart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                {isLoggedIn && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                )}
               </button>
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">2</span>
+                {isLoggedIn && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">2</span>
+                )}
               </button>
               <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
                 <Menu className="w-5 h-5" />

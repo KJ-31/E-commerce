@@ -16,7 +16,7 @@ import { ProductsModule } from './products/products.module';
       password: process.env.POSTGRES_PASSWORD || 'password',
       database: process.env.POSTGRES_DB || 'db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false, // 기존 데이터베이스 구조 유지
+      synchronize: true, // 개발 중에만 true로 설정
       logging: process.env.NODE_ENV === 'development',
     }),
     MyPageModule,
