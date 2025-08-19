@@ -11,6 +11,16 @@ export interface Product {
   tags: string[];
   description?: string;
   category?: string;
+  title: string; // product.title
+  originalPrice?: number; // product.originalPrice
+  reviewCount?: number; // product.reviewCount
+  likeCount?: number; // product.likeCount
+  stock?: number; // product.stock
+  images: string[]; // product.images
+  specifications?: { [key: string]: string }; // product.specifications
+  seller?: string; // product.seller
+  freeShipping?: boolean; // product.freeShipping
+  deliveryInfo?: string; // product.deliveryInfo
 }
 
 export const productService = {
@@ -29,6 +39,22 @@ export const productService = {
     } catch (error) {
       console.error('상품 목록 조회 오류:', error);
       return [];
+    }
+  },
+
+  async getProductById(id: number): Promise<Product | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // 상품을 찾을 수 없음
+        }
+        throw new Error(`상품 상세 정보를 가져오는데 실패했습니다: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`상품 ID ${id} 조회 오류:`, error);
+      return null;
     }
   },
 
