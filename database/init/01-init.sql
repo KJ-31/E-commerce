@@ -141,7 +141,7 @@ BEGIN
         -- 남성의류 (8)
         ('남성 캐주얼 티셔츠', 8, 25000.00, '유니클로', '편안한 남성용 캐주얼 티셔츠', 100, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=600&fit=crop'),
         ('남성 정장', 8, 150000.00, 'ZARA', '남성용 정장 세트', 30, 'https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?w=600&h=600&fit=crop'),
-        ('남성 청바지', 8, 45000.00, 'Levi\'s', '남성용 스키니 진', 80, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&h=600&fit=crop'),
+        ('남성 청바지', 8, 45000.00, 'Levi\s', '남성용 스키니 진', 80, 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=600&h=600&fit=crop'),
         ('남성 후드티', 8, 35000.00, 'Nike', '남성용 후드 티셔츠', 60, 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=600&h=600&fit=crop'),
         ('남성 폴로셔츠', 8, 55000.00, 'Ralph Lauren', '남성용 폴로 셔츠', 40, 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&h=600&fit=crop'),
         ('남성 패딩', 8, 120000.00, 'The North Face', '남성용 패딩 자켓', 25, 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&h=600&fit=crop'),
@@ -154,7 +154,7 @@ BEGIN
         ('여성 스커트', 9, 40000.00, 'Mango', '여성용 미니 스커트', 50, 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=600&h=600&fit=crop'),
         ('여성 니트', 9, 55000.00, 'COS', '여성용 니트 스웨터', 45, 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&h=600&fit=crop'),
         ('여성 코트', 9, 180000.00, 'Massimo Dutti', '여성용 울 코트', 20, 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=600&h=600&fit=crop'),
-        ('여성 청바지', 9, 50000.00, 'Levi\'s', '여성용 하이웨이스트 진', 75, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&h=600&fit=crop'),
+        ('여성 청바지', 9, 50000.00, 'Levi\s', '여성용 하이웨이스트 진', 75, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=600&h=600&fit=crop'),
         ('여성 운동복', 9, 70000.00, 'Lululemon', '여성용 요가 팬츠', 55, 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=600&fit=crop'),
         ('여성 가방', 9, 120000.00, 'Michael Kors', '여성용 크로스백', 30, 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&h=600&fit=crop'),
         
