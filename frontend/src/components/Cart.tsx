@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { orderService, CreateOrderRequest } from '../services/orderService';
+import { tossPaymentService } from '../services/tossPaymentService';
+import { cartService, CartItem as CartServiceItem } from '../services/cartService';
 
 interface CartItem {
   id: number;
@@ -8,8 +10,7 @@ interface CartItem {
   productName: string;
   price: number;
   quantity: number;
-  image: string;
-  company: string;
+  img: string;
 }
 
 interface CartProps {
@@ -22,31 +23,17 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
 
-  // 장바구니 데이터 (임시 데이터)
+  // 실제 장바구니 데이터 로드
   useEffect(() => {
-    // 실제로는 API에서 가져올 데이터
-    const mockCartItems: CartItem[] = [
-      {
-        id: 1,
-        productId: 1,
-        productName: 'iPhone 15 Pro',
-        price: 1500000,
-        quantity: 1,
-        image: 'https://via.placeholder.com/100x100?text=iPhone',
-        company: 'Apple'
-      },
-      {
-        id: 2,
-        productId: 2,
-        productName: 'Samsung Galaxy S24',
-        price: 1200000,
-        quantity: 2,
-        image: 'https://via.placeholder.com/100x100?text=Galaxy',
-        company: 'Samsung'
-      }
-    ];
-    setCartItems(mockCartItems);
+    loadCartItems();
   }, []);
+
+  // 장바구니 아이템 로드
+  const loadCartItems = () => {
+    const items = cartService.getCart();
+    setCartItems(items);
+    console.log('장바구니 아이템 로드됨:', items);
+  };
 
   // 전체 선택/해제
   const handleSelectAll = () => {
@@ -76,15 +63,27 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
     
-    setCartItems(cartItems.map(item => 
-      item.id === itemId ? { ...item, quantity: newQuantity } : item
-    ));
+    const item = cartItems.find(item => item.id === itemId);
+    if (item) {
+      cartService.updateQuantity(item.productId, newQuantity);
+      loadCartItems(); // 장바구니 다시 로드
+      
+      // 장바구니 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
   };
 
   // 아이템 삭제
   const handleDeleteItem = (itemId: number) => {
-    setCartItems(cartItems.filter(item => item.id !== itemId));
-    setSelectedItems(selectedItems.filter(id => id !== itemId));
+    const item = cartItems.find(item => item.id === itemId);
+    if (item) {
+      cartService.removeFromCart(item.productId);
+      loadCartItems(); // 장바구니 다시 로드
+      setSelectedItems(selectedItems.filter(id => id !== itemId));
+      
+      // 장바구니 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    }
   };
 
   // 선택된 아이템 삭제
@@ -95,15 +94,60 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
     }
     
     if (window.confirm('선택한 상품을 삭제하시겠습니까?')) {
-      setCartItems(cartItems.filter(item => !selectedItems.includes(item.id)));
+      selectedItems.forEach(itemId => {
+        const item = cartItems.find(item => item.id === itemId);
+        if (item) {
+          cartService.removeFromCart(item.productId);
+        }
+      });
+      
+      loadCartItems(); // 장바구니 다시 로드
       setSelectedItems([]);
       setSelectAll(false);
+      
+      // 장바구니 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
     }
   };
 
-  // 주문하기
-  const handleOrder = async () => {
-    console.log('주문하기 버튼 클릭됨');
+  // 토스페이먼츠 결제 페이지로 이동
+  const handleTossPayment = () => {
+    console.log('토스페이먼츠 결제 버튼 클릭됨');
+    
+    if (!isLoggedIn) {
+      alert('로그인 후 이용 가능합니다.');
+      navigateTo('/login');
+      return;
+    }
+
+    if (selectedItems.length === 0) {
+      alert('주문할 상품을 선택해주세요.');
+      return;
+    }
+
+    // 로그인 정보를 세션에 저장 (결제 후 복구용)
+    if (userInfo) {
+      sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+      sessionStorage.setItem('userType', 'user'); // userType도 저장
+    }
+
+    // 선택된 상품들과 결제 정보를 세션에 저장
+    const selectedItemsData = cartItems.filter(item => selectedItems.includes(item.id));
+    const paymentData = {
+      items: selectedItemsData,
+      totalPrice: finalPrice,
+      userInfo: userInfo
+    };
+    
+    sessionStorage.setItem('pendingPayment', JSON.stringify(paymentData));
+    
+    // 토스페이먼츠 결제 페이지로 이동
+    navigateTo('/toss-payment');
+  };
+
+  // 기존 주문하기 (직접 주문 처리)
+  const handleDirectOrder = async () => {
+    console.log('직접 주문하기 버튼 클릭됨');
     
     if (!isLoggedIn) {
       alert('로그인 후 이용 가능합니다.');
@@ -145,9 +189,19 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
       navigateTo(`/order-complete?orderId=${orderResult.orderId}`);
       
       // 장바구니에서 주문된 상품들 제거
-      setCartItems(cartItems.filter(item => !selectedItems.includes(item.id)));
+      selectedItems.forEach(itemId => {
+        const item = cartItems.find(item => item.id === itemId);
+        if (item) {
+          cartService.removeFromCart(item.productId);
+        }
+      });
+      
+      loadCartItems(); // 장바구니 다시 로드
       setSelectedItems([]);
       setSelectAll(false);
+      
+      // 장바구니 업데이트 이벤트 발생
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
       
     } catch (error) {
       console.error('주문 처리 오류:', error);
@@ -291,13 +345,13 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
                           className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                         />
                         <img
-                          src={item.image}
+                          src={item.img || 'https://via.placeholder.com/80x80?text=No+Image'}
                           alt={item.productName}
                           className="w-20 h-20 object-cover rounded"
                         />
                         <div className="flex-1">
                           <h3 className="text-sm font-medium text-gray-900">{item.productName}</h3>
-                          <p className="text-sm text-gray-500">{item.company}</p>
+                          <p className="text-sm text-gray-500">상품</p>
                           <div className="flex items-center space-x-4 mt-2">
                             <div className="flex items-center border rounded">
                               <button
@@ -375,13 +429,25 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
               </div>
 
               {/* 주문하기 버튼 */}
-              <button
-                onClick={handleOrder}
-                disabled={selectedItems.length === 0}
-                className="w-full bg-red-600 text-white py-3 rounded-md font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                주문하기
-              </button>
+              <div className="space-y-3">
+                <button
+                  onClick={handleTossPayment}
+                  disabled={selectedItems.length === 0}
+                  className="w-full bg-blue-600 text-white py-3 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                  </svg>
+                  토스페이먼츠로 결제하기
+                </button>
+                <button
+                  onClick={handleDirectOrder}
+                  disabled={selectedItems.length === 0}
+                  className="w-full bg-red-600 text-white py-3 rounded-md font-medium hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  직접 주문하기
+                </button>
+              </div>
             </div>
           </div>
         </div>

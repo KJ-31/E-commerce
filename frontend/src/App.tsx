@@ -6,6 +6,9 @@ import SignUp from './components/SignUp';
 import Login from './components/Login';
 import Cart from './components/Cart';
 import OrderComplete from './components/OrderComplete';
+import TossPayment from './components/TossPayment';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFail from './components/PaymentFail';
 import SellerMyPage from './seller_mypage/SellerMyPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -71,6 +74,12 @@ function AppContent() {
         return <Cart navigateTo={navigateTo} />;
       case '/order-complete':
         return <OrderComplete navigateTo={navigateTo} />;
+      case '/toss-payment':
+        return <TossPayment navigateTo={navigateTo} />;
+      case '/payment-success':
+        return <PaymentSuccess navigateTo={navigateTo} />;
+      case '/payment-fail':
+        return <PaymentFail navigateTo={navigateTo} />;
       case '/seller/mypage':
         if (!handleProtectedRouteAccess(currentPath)) return null;
         if (userType !== 'seller') {
