@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Category } from './category.entity';
+import { ProductImage } from './product-images.entity';
 
 @Entity('products')
 export class Product {
@@ -36,4 +37,7 @@ export class Product {
   @ManyToOne(() => Category)
   @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  @OneToMany(() => ProductImage, productImage => productImage.product)
+  productImages: ProductImage[];
 }
