@@ -57,8 +57,8 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
 
       if (response.ok) {
         const data = await response.json();
-        // 로그인 성공 시 AuthContext 업데이트
-        login(userType);
+        // 로그인 성공 시 AuthContext 업데이트 (사용자 정보 포함)
+        login(userType, data.user);
         alert('로그인 성공!');
         navigateTo?.('/');
       } else {

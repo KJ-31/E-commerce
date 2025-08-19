@@ -114,7 +114,14 @@ export class AuthService {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      const isPasswordValid = await bcrypt.compare(password, seller.seller_pw);
+      // 테스트용: 실제 해시가 아닌 경우 문자열 비교
+      let isPasswordValid = false;
+      if (seller.seller_pw.startsWith('$2b$') || seller.seller_pw.startsWith('$2a$')) {
+        isPasswordValid = await bcrypt.compare(password, seller.seller_pw);
+      } else {
+        isPasswordValid = password === seller.seller_pw;
+      }
+      
       if (!isPasswordValid) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
@@ -122,9 +129,11 @@ export class AuthService {
       return {
         message: '로그인 성공',
         user: {
-          id: seller.seller_id,
+          user_id: seller.seller_id,
           email: seller.email,
-          name: seller.seller_name,
+          user_name: seller.seller_name,
+          user_phone_num: seller.seller_phone_num,
+          user_addr: seller.seller_addr,
           type: 'seller'
         }
       };
@@ -135,7 +144,14 @@ export class AuthService {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      const isPasswordValid = await bcrypt.compare(password, user.user_pw);
+      // 테스트용: 실제 해시가 아닌 경우 문자열 비교
+      let isPasswordValid = false;
+      if (user.user_pw.startsWith('$2b$') || user.user_pw.startsWith('$2a$')) {
+        isPasswordValid = await bcrypt.compare(password, user.user_pw);
+      } else {
+        isPasswordValid = password === user.user_pw;
+      }
+      
       if (!isPasswordValid) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
@@ -143,9 +159,11 @@ export class AuthService {
       return {
         message: '로그인 성공',
         user: {
-          id: user.user_id,
+          user_id: user.user_id,
           email: user.email,
-          name: user.user_name,
+          user_name: user.user_name,
+          user_phone_num: user.user_phone_num,
+          user_addr: user.user_addr,
           type: 'user'
         }
       };

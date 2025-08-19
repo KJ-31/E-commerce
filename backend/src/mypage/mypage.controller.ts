@@ -65,14 +65,14 @@ export class MyPageController {
 
   // 마이페이지 전체 정보 조회 (한 번에 모든 정보)
   @Get('dashboard')
-  async getDashboard(@Request() req) {
-    const userId = req.user?.userId || 1;
+  async getDashboard(@Request() req, @Query('userId') userId?: number) {
+    const targetUserId = userId || req.user?.userId || 1;
     
     const [userInfo, orderStats, recentOrders, benefits] = await Promise.all([
-      this.myPageService.getUserInfo(userId),
-      this.myPageService.getOrderStats(userId),
-      this.myPageService.getRecentOrders(userId, 3),
-      this.myPageService.getUserBenefits(userId)
+      this.myPageService.getUserInfo(targetUserId),
+      this.myPageService.getOrderStats(targetUserId),
+      this.myPageService.getRecentOrders(targetUserId, 3),
+      this.myPageService.getUserBenefits(targetUserId)
     ]);
 
     return {

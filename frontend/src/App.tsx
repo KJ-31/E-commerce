@@ -4,6 +4,8 @@ import ElevenStreetHome from './11st-Home';
 import MyPage from './components/MyPage';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
+import Cart from './components/Cart';
+import OrderComplete from './components/OrderComplete';
 import SellerMyPage from './seller_mypage/SellerMyPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -56,12 +58,19 @@ function AppContent() {
   };
 
   const renderCurrentPage = () => {
-    switch (currentPath) {
+    // 쿼리 파라미터 제거하고 경로만 추출
+    const pathWithoutQuery = currentPath.split('?')[0];
+    
+    switch (pathWithoutQuery) {
       case '/':
         return <ElevenStreetHome navigateTo={navigateTo} />;
       case '/mypage':
         if (!handleMyPageAccess()) return null;
         return <MyPage navigateTo={navigateTo} />;
+      case '/cart':
+        return <Cart navigateTo={navigateTo} />;
+      case '/order-complete':
+        return <OrderComplete navigateTo={navigateTo} />;
       case '/seller/mypage':
         if (!handleProtectedRouteAccess(currentPath)) return null;
         if (userType !== 'seller') {

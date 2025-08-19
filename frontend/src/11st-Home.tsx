@@ -118,14 +118,14 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
   const handleMyPageClick = () => {
     if (!isLoggedIn) {
       alert('로그인 후 이용 가능합니다.');
-      navigateTo('/login');
+      navigateTo?.('/login');
       return;
     }
     
     if (userType === 'seller') {
-      navigateTo('/seller/mypage');
+      navigateTo?.('/seller/mypage');
     } else {
-      navigateTo('/mypage');
+      navigateTo?.('/mypage');
     }
   };
 
@@ -209,7 +209,10 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                 )}
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+              <button 
+                onClick={() => navigateTo?.('/cart')}
+                className="p-2 hover:bg-gray-100 rounded-lg relative"
+              >
                 <ShoppingCart className="w-5 h-5" />
                 {isLoggedIn && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">2</span>

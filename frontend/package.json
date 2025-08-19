@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^6.7.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^13.5.0",
+    "@tosspayments/payment-sdk": "^1.9.1",
     "@types/jest": "^27.5.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
