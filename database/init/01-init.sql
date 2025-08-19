@@ -18,15 +18,20 @@ BEGIN
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- 관리자
-        CREATE TABLE admins (
-            admin_id SERIAL PRIMARY KEY,
+        -- 셀러(판매자)
+        CREATE TABLE sellers (
+            seller_id SERIAL PRIMARY KEY,
             email VARCHAR(255) UNIQUE NOT NULL,
-            admin_pw VARCHAR(255) NOT NULL,
-            admin_name VARCHAR(100) NOT NULL,
-            admin_phone_num VARCHAR(20),
-            admin_addr TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            seller_pw VARCHAR(255) NOT NULL,
+            seller_name VARCHAR(100) NOT NULL,
+            seller_phone_num VARCHAR(20),
+            seller_addr TEXT,
+            company_name VARCHAR(100),
+            business_number VARCHAR(20),
+            company_phone VARCHAR(20),
+            company_addr TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
         -- 카테고리
@@ -99,9 +104,10 @@ BEGIN
         ('채소', 4),
         ('육류', 4);
 
-        -- 관리자 데이터
-        INSERT INTO admins (email, admin_pw, admin_name, admin_phone_num, admin_addr) VALUES
-        ('admin@11st.com', 'hashed_admin_password', '11번가 관리자', '010-1234-5678', '서울시 강남구 11번가 본사');
+        -- 셀러 데이터
+        INSERT INTO sellers (email, seller_pw, seller_name, seller_phone_num, seller_addr, company_name, business_number, company_phone, company_addr) VALUES
+        ('seller1@test.com', 'hashed_seller_password', '김판매', '010-1111-3333', '서울시 강남구 테헤란로 123', '(주)테스트회사', '123-45-67890', '02-1234-5678', '서울시 강남구 테헤란로 456'),
+        ('seller2@test.com', 'hashed_seller_password', '이상점', '010-2222-4444', '서울시 서초구 서초대로 456', '(주)샘플스토어', '234-56-78901', '02-2345-6789', '서울시 서초구 서초대로 789');
 
         -- 사용자 데이터
         INSERT INTO users (email, user_pw, user_name, user_addr, user_phone_num) VALUES

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 type LoginProps = {
   navigateTo?: (path: string) => void;
@@ -31,6 +32,7 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
   const [userType, setUserType] = useState<'user' | 'seller'>('user');
   const [form, setForm] = useState<Form>({ id: '', pw: '', keep: false });
   const [showPw, setShowPw] = useState(false);
+  const { login } = useAuth();
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -49,10 +51,14 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
         body: JSON.stringify({
           email: form.id,
           password: form.pw,
+          userType: userType, // 사용자 타입 전송
         }),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        // 로그인 성공 시 AuthContext 업데이트
+        login(userType);
         alert('로그인 성공!');
         navigateTo?.('/');
       } else {
