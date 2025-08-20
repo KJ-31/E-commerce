@@ -39,12 +39,7 @@ function AppContent() {
           isLoggedIn && userType === 'seller' ? <SellerMyPage /> : <Login navigateTo={navigateTo} />
         } />
         <Route path="/signup" element={<SignUp navigateTo={navigateTo} />} />
-        <Route path="/seller-signup" element={
-          <SellerSignUp 
-            onSuccess={() => navigateTo('/login')} 
-            onSwitchToLogin={() => navigateTo('/login')} 
-          />
-        } />
+        <Route path="/seller-signup" element={<SellerSignUp navigateTo={navigateTo} />} />
         <Route path="/login" element={<Login navigateTo={navigateTo} />} />
         <Route path="*" element={<ElevenStreetHome navigateTo={navigateTo} />} />
       </Routes>

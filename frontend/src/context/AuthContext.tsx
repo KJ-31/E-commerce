@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUserType = localStorage.getItem('userType') as UserType;
-    const storedUserInfo = sessionStorage.getItem('userInfo');
+    const storedUserInfo = localStorage.getItem('userInfo');
     
     if (storedToken && storedUserType) {
       setIsLoggedIn(true);
@@ -69,15 +69,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (userData) {
       setUserInfo(userData);
-      sessionStorage.setItem('userInfo', JSON.stringify(userData));
+      localStorage.setItem('userInfo', JSON.stringify(userData));
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userType');
-    sessionStorage.removeItem('userInfo');
-    sessionStorage.removeItem('userType');
+    localStorage.removeItem('userInfo');
     setIsLoggedIn(false);
     setToken(null);
     setUserType(null);
