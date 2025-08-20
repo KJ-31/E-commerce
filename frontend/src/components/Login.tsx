@@ -61,10 +61,6 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
     }
     
     try {
-      // AuthContext의 login 함수 사용 (이미 모든 로직이 포함되어 있음)
-      const success = await login(form.id, form.pw, userType);
-      
-      if (success) {
       const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
         headers: {
@@ -73,7 +69,7 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
         body: JSON.stringify({
           email: form.id,
           password: form.pw,
-          userType: userType, // 사용자 타입 전송
+          userType: userType,
         }),
       });
 
@@ -81,22 +77,23 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
         const data = await response.json();
 
         if (data.accessToken) {
-          login(userType, data.accessToken);
-          navigateTo?.('/');
+          // 새로운 AuthContext login 함수 사용
+          login(userType, data.accessToken, data.user);
+          
+          // 판매자인 경우 판매자 마이페이지로, 일반 사용자는 홈으로
+          if (userType === 'seller') {
+            navigateTo?.('/seller/mypage');
+          } else {
+            navigateTo?.('/');
+          }
         } else {
           alert('로그인에 성공했으나 토큰을 받지 못했습니다.');
-        
-        // 판매자인 경우 판매자 마이페이지로, 일반 사용자는 홈으로
-        if (userType === 'seller') {
-          navigateTo?.('/seller-mypage');
-        } else {
-          navigateTo?.('/');
         }
       } else {
         alert('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
-    } catch (error: any) {
-      alert(error.message || '로그인에 실패했습니다.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '로그인에 실패했습니다.');
     }
   };
 

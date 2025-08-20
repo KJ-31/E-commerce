@@ -51,7 +51,7 @@ export class ProductsService {
     const products = await query.getMany();
     
     // 프론트엔드에서 사용할 수 있는 형태로 변환
-    return products.map(product => ({
+    const result = products.map(product => ({
       id: product.product_id,
       brand: product.company,
       name: product.product_name,

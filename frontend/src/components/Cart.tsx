@@ -18,7 +18,7 @@ interface CartProps {
 }
 
 const Cart: React.FC<CartProps> = ({ navigateTo }) => {
-  const { isLoggedIn, userInfo } = useAuth();
+  const { isLoggedIn, userInfo, userType } = useAuth();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -114,7 +114,7 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
   const handleTossPayment = () => {
     console.log('토스페이먼츠 결제 버튼 클릭됨');
     
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !userInfo) {
       alert('로그인 후 이용 가능합니다.');
       navigateTo('/login');
       return;
@@ -126,10 +126,8 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
     }
 
     // 로그인 정보를 세션에 저장 (결제 후 복구용)
-    if (userInfo) {
-      sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
-      sessionStorage.setItem('userType', 'user'); // userType도 저장
-    }
+    sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+    sessionStorage.setItem('userType', userType || 'general');
 
     // 선택된 상품들과 결제 정보를 세션에 저장
     const selectedItemsData = cartItems.filter(item => selectedItems.includes(item.id));

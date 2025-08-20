@@ -262,15 +262,27 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
               className="w-full rounded-2xl border px-5 py-3 pr-12 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
             <button
-              key={category.name}
-              className="flex items-center gap-1 hover:text-rose-600 transition-colors"
+              type="submit"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-lg"
+              aria-label="검색"
             >
-              {category.icon}
-              {category.name}
-              <ChevronDown className="w-3 h-3" />
+              <Search className="w-5 h-5 text-gray-400" />
             </button>
-          ))}
-        </nav>
+          </form>
+          
+          <nav className="flex items-center gap-4">
+            {CATEGORIES.map((category) => (
+              <button
+                key={category.name}
+                className="flex items-center gap-1 hover:text-rose-600 transition-colors"
+              >
+                {category.icon}
+                {category.name}
+                <ChevronDown className="w-3 h-3" />
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
@@ -400,17 +412,13 @@ function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string)
   };
 
   return (
-    <motion.a
-      href={`/product/${p.id}`} // 상품 상세 페이지 링크 추가
-      onClick={(e) => {
-        e.preventDefault();
-        navigateTo(`/product/${p.id}`);
-      }}
-      className="group relative block overflow-hidden rounded-2xl border bg-white shadow-sm"
+    <motion.div
+      className="group relative block overflow-hidden rounded-2xl border bg-white shadow-sm cursor-pointer"
       initial={{ y: 8, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.25 }}
+      onClick={() => navigateTo(`/product/${p.id}`)}
     >
       <div className="relative aspect-square bg-gray-50">
         <img src={p.img} alt={p.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
@@ -495,7 +503,7 @@ function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: st
         let url = 'http://localhost:3001/products';
         
         if (query) {
-          url = `http://localhost:3001/products/search?q=${encodeURIComponent(query)}`;
+          url = `http://localhost:3001/products?search=${encodeURIComponent(query)}`;
         }
         
         const response = await fetch(url);
@@ -504,13 +512,13 @@ function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: st
           setProducts(data);
         } else {
           console.error('Failed to fetch products');
-          // 에러 시 목 데이터 사용
-          setProducts(MOCK_PRODUCTS);
+          // 에러 시 빈 배열 사용
+          setProducts([]);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
-        // 에러 시 목 데이터 사용
-        setProducts(MOCK_PRODUCTS);
+        // 에러 시 빈 배열 사용
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -584,7 +592,7 @@ function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: st
           ))
         ) : list.length > 0 ? (
           list.map((p) => (
-            <ProductCard key={p.id} p={p} />
+            <ProductCard key={p.id} p={p} navigateTo={navigateTo} />
           ))
         ) : (
           <div className="col-span-full text-center py-8 text-gray-500">

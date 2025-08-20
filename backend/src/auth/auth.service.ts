@@ -98,6 +98,36 @@ export class AuthService {
     }
 
     const accessToken = this.jwtService.sign(payload);
-    return { accessToken };
+    
+    // 사용자 정보도 함께 반환
+    if (userType === 'seller') {
+      const seller = await this.sellerRepository.findOne({ where: { email } });
+      if (!seller) throw new UnauthorizedException('사용자 정보를 찾을 수 없습니다.');
+      
+      return { 
+        accessToken,
+        user: {
+          user_id: seller.seller_id,
+          email: seller.email,
+          user_name: seller.seller_name,
+          user_addr: seller.seller_addr,
+          user_phone_num: seller.seller_phone_num
+        }
+      };
+    } else {
+      const user = await this.userRepository.findOne({ where: { email } });
+      if (!user) throw new UnauthorizedException('사용자 정보를 찾을 수 없습니다.');
+      
+      return { 
+        accessToken,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          user_name: user.user_name,
+          user_addr: user.user_addr,
+          user_phone_num: user.user_phone_num
+        }
+      };
+    }
   }
 }

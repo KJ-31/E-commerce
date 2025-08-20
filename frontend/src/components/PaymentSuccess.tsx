@@ -16,7 +16,7 @@ interface PaymentResult {
 }
 
 const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ navigateTo }) => {
-  const { isLoggedIn, userInfo, restoreSession } = useAuth();
+  const { isLoggedIn, userInfo } = useAuth();
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +33,8 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ navigateTo }) => {
       
       // 결제 전에 저장된 로그인 정보 복구 시도
       if (!isLoggedIn) {
-        restoreSession();
         console.log('PaymentSuccess에서 세션 복구 시도 완료');
+        // 세션에서 사용자 정보를 직접 확인하도록 수정됨
       }
       
       handlePaymentSuccess();

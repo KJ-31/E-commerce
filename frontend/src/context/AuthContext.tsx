@@ -17,7 +17,7 @@ interface AuthContextType {
   token: string | null;
   userInfo: UserInfo | null;
 
-  login: (email: string, password: string, type?: UserType) => Promise<boolean>;
+  login: (type: UserType, token: string, userData?: UserInfo) => void;
     
   logout: () => void;
 }
@@ -38,34 +38,50 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState<UserType>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
     const storedUserType = localStorage.getItem('userType') as UserType;
+    const storedUserInfo = sessionStorage.getItem('userInfo');
+    
     if (storedToken && storedUserType) {
       setIsLoggedIn(true);
       setToken(storedToken);
       setUserType(storedUserType);
+      
+      if (storedUserInfo) {
+        try {
+          setUserInfo(JSON.parse(storedUserInfo));
+        } catch (error) {
+          console.error('Failed to parse stored user info:', error);
+        }
+      }
     }
   }, []);
 
-  const login = (type: UserType, token: string) => {
+  const login = (type: UserType, token: string, userData?: UserInfo) => {
     localStorage.setItem('token', token);
     localStorage.setItem('userType', type || '');
     setIsLoggedIn(true);
     setToken(token);
     setUserType(type);
+    
+    if (userData) {
+      setUserInfo(userData);
+      sessionStorage.setItem('userInfo', JSON.stringify(userData));
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userType');
+    sessionStorage.removeItem('userInfo');
+    sessionStorage.removeItem('userType');
     setIsLoggedIn(false);
     setToken(null);
     setUserType(null);
     setUserInfo(null);
-    sessionStorage.removeItem('userInfo');
-    sessionStorage.removeItem('userType');
   };
 
   return (

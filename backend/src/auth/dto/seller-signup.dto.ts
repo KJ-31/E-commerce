@@ -17,31 +17,25 @@ export class SellerSignUpDto {
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   phone?: string;
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   address?: string;
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   companyName?: string;
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   businessNumber?: string;
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   companyPhone?: string;
 
   @IsOptional()
   @IsString()
-  @IsNotEmpty()
   companyAddress?: string;
 }

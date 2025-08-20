@@ -119,6 +119,19 @@ function SellerSignUp({ onSuccess, onSwitchToLogin }: SellerSignUpProps) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
+                주소
+              </label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
                 회사명
               </label>
               <input
