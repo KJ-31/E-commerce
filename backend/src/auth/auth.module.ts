@@ -4,10 +4,11 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../entities/user.entity';
 import { Admin } from '../entities/admin.entity';
+import { Seller } from '../entities/seller.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Admin]),
+    TypeOrmModule.forFeature([User, Admin, Seller]),
   ],
   controllers: [AuthController],
   providers: [AuthService],

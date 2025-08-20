@@ -168,7 +168,7 @@ function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element
             className="relative flex-1"
             onSubmit={(e) => {
               e.preventDefault();
-              alert(`검색어: ${query}`);
+              // 검색은 실시간으로 처리됨 (useEffect에서 query 변경 감지)
             }}
             role="search"
             aria-label="사이트 검색"
@@ -397,13 +397,43 @@ function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => v
 
 function DealsGrid({ query }: { query: string }): JSX.Element {
   const [sort, setSort] = useState<SortKey>("best");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // API에서 상품 데이터 가져오기
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        let url = 'http://localhost:3001/products';
+        
+        if (query) {
+          url = `http://localhost:3001/products/search?q=${encodeURIComponent(query)}`;
+        }
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data);
+        } else {
+          console.error('Failed to fetch products');
+          // 에러 시 목 데이터 사용
+          setProducts(MOCK_PRODUCTS);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        // 에러 시 목 데이터 사용
+        setProducts(MOCK_PRODUCTS);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [query]);
 
   const list = useMemo(() => {
-    let arr = [...MOCK_PRODUCTS];
-    if (query) {
-      const q = query.trim().toLowerCase();
-      arr = arr.filter((p) => `${p.brand} ${p.name}`.toLowerCase().includes(q));
-    }
+    let arr = [...products];
     switch (sort) {
       case "new":
         arr.reverse();
@@ -417,7 +447,7 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
       default:
     }
     return arr;
-  }, [sort, query]);
+  }, [sort, products]);
 
   return (
     <section className="mx-auto max-w-screen-2xl px-4">
@@ -430,9 +460,24 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {list.map((p) => (
-          <ProductCard key={p.id} p={p} />
-        ))}
+        {loading ? (
+          // 로딩 스켈레톤
+          Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 rounded-xl h-48 mb-2"></div>
+              <div className="bg-gray-200 h-4 rounded mb-1"></div>
+              <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+            </div>
+          ))
+        ) : list.length > 0 ? (
+          list.map((p) => (
+            <ProductCard key={p.id} p={p} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            {query ? `"${query}"에 대한 검색 결과가 없습니다.` : '상품이 없습니다.'}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -10,7 +10,7 @@ RUN npm install
 COPY . .
 
 # 포트 노출
-EXPOSE 3000
+EXPOSE 5173
 
 # 개발 서버 실행 (Hot Reload 활성화)
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev", "--", "--host"]

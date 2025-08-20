@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MyPageModule } from './mypage/mypage.module';
 import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
+import { SellersModule } from './sellers/sellers.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { AuthModule } from './auth/auth.module';
     }),
     MyPageModule,
     AuthModule,
+    ProductsModule,
+    SellersModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

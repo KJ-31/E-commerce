@@ -19,6 +19,7 @@ export class SellerSignUpDto extends SignUpDto {
 export class LoginDto {
   email: string;
   password: string;
+  userType?: 'user' | 'seller';
 }
 
 @Controller('auth')
