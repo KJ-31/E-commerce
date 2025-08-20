@@ -12,17 +12,7 @@ function Logo() {
   )
 }
 
-function SocialIcon({ children, label }: { children: React.ReactNode; label: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="h-10 w-10 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center hover:bg-gray-50"
-    >
-      {children}
-    </button>
-  )
-}
+
 
 export default function App() {
   const [form, setForm] = useState<Form>({ id: '', pw: '', keep: false })
@@ -72,7 +62,7 @@ export default function App() {
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       aria-label="비밀번호 표시 전환"
                     >
-                      {showPw ? '🙈' : '👁️'}
+                      <i className={`fa ${showPw ? 'fa-eye-slash' : 'fa-eye'} fa-lg`}></i>
                     </button>
                   </div>
                 </div>
@@ -83,22 +73,6 @@ export default function App() {
                 >
                   로그인
                 </button>
-
-                {/* 최근로그인 + 소셜 행 */}
-                <div className="mt-2">
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 border border-gray-200">
-                    최근로그인
-                  </span>
-                </div>
-
-                <div className="mt-2 flex items-center gap-4">
-                  <SocialIcon label="카카오">💬</SocialIcon>
-                  <SocialIcon label="네이버">N</SocialIcon>
-                  <SocialIcon label="구글">G</SocialIcon>
-                  <SocialIcon label="애플"></SocialIcon>
-                  <SocialIcon label="페이코">P</SocialIcon>
-                  <SocialIcon label="휴대폰">📱</SocialIcon>
-                </div>
 
                 {/* 로그인 상태 유지 */}
                 <label className="mt-2 flex items-center gap-2 text-sm text-gray-600 select-none">
