@@ -243,9 +243,24 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
           </div>
         </div>
 
-        {/* 카테고리 네비게이션 */}
-        <nav className="hidden md:flex items-center gap-6 py-3 text-sm border-t">
-          {CATEGORIES.map((category) => (
+        <div className="flex items-center gap-3 pb-4">
+          <form
+            className="relative flex-1"
+            onSubmit={(e) => {
+              e.preventDefault();
+              // 검색은 실시간으로 처리됨 (useEffect에서 query 변경 감지)
+            }}
+            role="search"
+            aria-label="사이트 검색"
+          >
+            <input
+              id="search-input"
+              name="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="브랜드, 상품, 카테고리 검색"
+              className="w-full rounded-2xl border px-5 py-3 pr-12 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+            />
             <button
               key={category.name}
               className="flex items-center gap-1 hover:text-rose-600 transition-colors"
@@ -472,22 +487,54 @@ function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: st
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // API에서 상품 데이터 가져오기
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
       try {
-        const data = await productService.getProducts(sort, query, 12);
-        setProducts(data);
+        setLoading(true);
+        let url = 'http://localhost:3001/products';
+        
+        if (query) {
+          url = `http://localhost:3001/products/search?q=${encodeURIComponent(query)}`;
+        }
+        
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          setProducts(data);
+        } else {
+          console.error('Failed to fetch products');
+          // 에러 시 목 데이터 사용
+          setProducts(MOCK_PRODUCTS);
+        }
       } catch (error) {
-        console.error('상품 목록 조회 실패:', error);
-        setProducts([]);
+        console.error('Error fetching products:', error);
+        // 에러 시 목 데이터 사용
+        setProducts(MOCK_PRODUCTS);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [sort, query]);
+  }, [query]);
+
+  const list = useMemo(() => {
+    let arr = [...products];
+    switch (sort) {
+      case "new":
+        arr.reverse();
+        break;
+      case "low":
+        arr.sort((a, b) => a.price * (1 - a.sale / 100) - b.price * (1 - b.sale / 100));
+        break;
+      case "high":
+        arr.sort((a, b) => b.price * (1 - b.sale / 100) - a.price * (1 - a.sale / 100));
+        break;
+      default:
+    }
+    return arr;
+  }, [sort, products]);
 
   if (loading) {
     return (
@@ -526,9 +573,24 @@ function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: st
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {products.map((p) => (
-          <ProductCard key={p.id} p={p} navigateTo={navigateTo} />
-        ))}
+        {loading ? (
+          // 로딩 스켈레톤
+          Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 rounded-xl h-48 mb-2"></div>
+              <div className="bg-gray-200 h-4 rounded mb-1"></div>
+              <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+            </div>
+          ))
+        ) : list.length > 0 ? (
+          list.map((p) => (
+            <ProductCard key={p.id} p={p} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            {query ? `"${query}"에 대한 검색 결과가 없습니다.` : '상품이 없습니다.'}
+          </div>
+        )}
       </div>
     </section>
   );

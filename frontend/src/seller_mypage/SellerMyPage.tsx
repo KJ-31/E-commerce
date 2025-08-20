@@ -1,6 +1,19 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { 
+  getSellerDashboard, 
+  getSellerProducts, 
+  getSellerOrders, 
+  getSellerInquiries, 
+  createProduct,
+  deleteProducts,
+  SellerDashboard,
+  SellerProduct,
+  SellerOrder,
+  SellerInquiry
+} from '../services/sellerService';
+import { getCurrentUser, getCurrentSellerId } from '../services/authService';
+import { 
   Package, 
   DollarSign, 
   ShoppingBag, 
@@ -27,6 +40,36 @@ function SellerMyPage() {
   const [notifications, setNotifications] = useState([]);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [showProductForm, setShowProductForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // 상품 삭제 관련 상태
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
+  
+  // API 데이터 상태
+  const [dashboardData, setDashboardData] = useState<SellerDashboard | null>(null);
+  const [products, setProducts] = useState<SellerProduct[]>([]);
+  const [orders, setOrders] = useState<SellerOrder[]>([]);
+  const [inquiries, setInquiries] = useState<SellerInquiry[]>([]);
+  
+  // 로그인한 판매자 ID 가져오기
+  const getCurrentSellerId = () => {
+    const user = getCurrentUser();
+    return user?.id || 1; // 기본값으로 1 사용
+  };
+  
+  const [sellerId, setSellerId] = useState<number | null>(null);
+  
+  useEffect(() => {
+    try {
+      const id = getCurrentSellerId();
+      setSellerId(id);
+    } catch (error) {
+      console.error('Failed to get seller ID:', error);
+      // 판매자 로그인이 안되어 있으면 로그인 페이지로 리다이렉트
+      window.location.href = '/login';
+    }
+  }, []);
   
   // 상품 등록 폼 상태
   const [productForm, setProductForm] = useState({
@@ -39,102 +82,66 @@ function SellerMyPage() {
     images: []
   });
 
-  // 더미 데이터
-  const todayStats = {
-    views: 1247,
-    orders: 23,
-    sales: 1580000,
-    inquiries: 5
+  // API 데이터 로드 함수들
+  const loadDashboardData = async () => {
+    if (!sellerId) return;
+    try {
+      setLoading(true);
+      const data = await getSellerDashboard(sellerId);
+      setDashboardData(data);
+    } catch (error) {
+      console.error('대시보드 데이터 로드 실패:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const recentOrders = [
-    { 
-      id: '2024-001', 
-      product: '무선 블루투스 이어폰', 
-      amount: 89000, 
-      status: '배송중', 
-      time: '2시간 전',
-      customer: '김**',
-      statusColor: 'bg-blue-100 text-blue-700'
-    },
-    { 
-      id: '2024-002', 
-      product: '스마트 워치', 
-      amount: 259000, 
-      status: '결제완료', 
-      time: '4시간 전',
-      customer: '이**',
-      statusColor: 'bg-yellow-100 text-yellow-700'
-    },
-    { 
-      id: '2024-003', 
-      product: '무선 충전기', 
-      amount: 45000, 
-      status: '배송완료', 
-      time: '6시간 전',
-      customer: '박**',
-      statusColor: 'bg-green-100 text-green-700'
-    },
-  ];
-
-  const products = [
-    {
-      id: 1,
-      name: '무선 블루투스 이어폰',
-      price: 89000,
-      stock: 45,
-      views: 1234,
-      orders: 28,
-      image: 'https://picsum.photos/seed/product1/200/200'
-    },
-    {
-      id: 2,
-      name: '스마트 워치',
-      price: 259000,
-      stock: 12,
-      views: 892,
-      orders: 15,
-      image: 'https://picsum.photos/seed/product2/200/200'
-    },
-    {
-      id: 3,
-      name: '무선 충전기',
-      price: 45000,
-      stock: 67,
-      views: 543,
-      orders: 35,
-      image: 'https://picsum.photos/seed/product3/200/200'
+  const loadProducts = async () => {
+    if (!sellerId) return;
+    try {
+      const data = await getSellerProducts(sellerId);
+      setProducts(data);
+    } catch (error) {
+      console.error('상품 데이터 로드 실패:', error);
     }
-  ];
+  };
 
-  const inquiries = [
-    {
-      id: 1,
-      customer: '김**',
-      product: '무선 블루투스 이어폰',
-      subject: '배송 문의',
-      message: '언제 배송되나요?',
-      time: '1시간 전',
-      isAnswered: false
-    },
-    {
-      id: 2,
-      customer: '이**',
-      product: '스마트 워치',
-      subject: '교환 문의',
-      message: '색상 교환이 가능한가요?',
-      time: '3시간 전',
-      isAnswered: true
+  const loadOrders = async () => {
+    if (!sellerId) return;
+    try {
+      const data = await getSellerOrders(sellerId);
+      setOrders(data);
+    } catch (error) {
+      console.error('주문 데이터 로드 실패:', error);
     }
-  ];
+  };
+
+  const loadInquiries = async () => {
+    if (!sellerId) return;
+    try {
+      const data = await getSellerInquiries(sellerId);
+      setInquiries(data);
+    } catch (error) {
+      console.error('문의 데이터 로드 실패:', error);
+    }
+  };
 
   useEffect(() => {
-    setNotifications([
-      { id: 1, type: 'order', message: '새로운 주문이 들어왔습니다', time: '5분 전' },
-      { id: 2, type: 'inquiry', message: '고객 문의가 등록되었습니다', time: '15분 전' },
-      { id: 3, type: 'stock', message: '재고가 부족합니다', time: '1시간 전' }
-    ]);
-  }, []);
+    if (sellerId) {
+      // sellerId가 설정된 후 초기 데이터 로드
+      loadDashboardData();
+      loadProducts();
+      loadOrders();
+      loadInquiries();
+      
+      // 알림 데이터 설정
+      setNotifications([
+        { id: 1, type: 'order', message: '새로운 주문이 들어왔습니다', time: '5분 전' },
+        { id: 2, type: 'inquiry', message: '고객 문의가 등록되었습니다', time: '15분 전' },
+        { id: 3, type: 'stock', message: '재고가 부족합니다', time: '1시간 전' }
+      ]);
+    }
+  }, [sellerId]);
 
   // 상품 등록 폼 핸들러
   const handleProductFormChange = (field, value) => {
@@ -144,21 +151,86 @@ function SellerMyPage() {
     }));
   };
 
-  const handleProductSubmit = (e) => {
+  const handleProductSubmit = async (e) => {
     e.preventDefault();
-    // 여기서 API 호출하여 상품 등록
-    console.log('상품 등록:', productForm);
-    alert('상품이 성공적으로 등록되었습니다!');
-    setShowProductForm(false);
-    setProductForm({
-      name: '',
-      description: '',
-      price: '',
-      stock: '',
-      category: '',
-      brand: '',
-      images: []
+    
+    if (!sellerId) {
+      alert('판매자 인증이 필요합니다.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      const result = await createProduct(sellerId, {
+        name: productForm.name,
+        description: productForm.description,
+        price: productForm.price,
+        stock: productForm.stock,
+        category: productForm.category,
+        brand: productForm.brand
+      }, productForm.images);
+      
+      alert('상품이 성공적으로 등록되었습니다!');
+      setShowProductForm(false);
+      setProductForm({
+        name: '',
+        description: '',
+        price: '',
+        stock: '',
+        category: '',
+        brand: '',
+        images: []
+      });
+      
+      // 상품 목록 새로고침
+      await loadProducts();
+      
+    } catch (error) {
+      console.error('상품 등록 실패:', error);
+      alert('상품 등록에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 이미지 업로드 핸들러
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      setProductForm(prev => ({
+        ...prev,
+        images: [...prev.images, ...files]
+      }));
+    }
+  };
+
+  // 이미지 제거 핸들러
+  const handleImageRemove = (index) => {
+    setProductForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  // 상품 설명에 이미지 추가 핸들러
+  const handleDescriptionImageUpload = (event) => {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageData = e.target.result;
+        const currentDesc = productForm.description;
+        const newDesc = currentDesc + `\n\n![이미지](${imageData})\n\n`;
+        handleProductFormChange('description', newDesc);
+      };
+      reader.readAsDataURL(file);
     });
+
+    // 파일 입력 초기화
+    event.target.value = '';
   };
 
   // 상품 등록 페이지 렌더링
@@ -275,14 +347,147 @@ function SellerMyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               상품 설명 <span className="text-red-500">*</span>
             </label>
+            
+            {/* 툴바 */}
+            <div className="border border-gray-300 rounded-t-lg bg-gray-50 p-2 flex gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('product-description') as HTMLTextAreaElement;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  const text = textarea.value;
+                  const selectedText = text.substring(start, end);
+                  const newText = text.substring(0, start) + `**${selectedText}**` + text.substring(end);
+                  handleProductFormChange('description', newText);
+                }}
+                className="px-2 py-1 bg-white border rounded hover:bg-gray-100"
+                title="굵게"
+              >
+                <strong>B</strong>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementById('product-description') as HTMLTextAreaElement;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  const text = textarea.value;
+                  const selectedText = text.substring(start, end);
+                  const newText = text.substring(0, start) + `*${selectedText}*` + text.substring(end);
+                  handleProductFormChange('description', newText);
+                }}
+                className="px-2 py-1 bg-white border rounded hover:bg-gray-100"
+                title="기울임"
+              >
+                <em>I</em>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const currentDesc = productForm.description;
+                  handleProductFormChange('description', currentDesc + '\n\n• ');
+                }}
+                className="px-2 py-1 bg-white border rounded hover:bg-gray-100"
+                title="목록 추가"
+              >
+                • 목록
+              </button>
+              
+              <span className="text-gray-400">|</span>
+              
+              {/* 이미지 업로드 버튼 */}
+              <label className="px-2 py-1 bg-white border rounded hover:bg-gray-100 cursor-pointer flex items-center gap-1" title="이미지 추가">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                이미지
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleDescriptionImageUpload}
+                  className="hidden"
+                />
+              </label>
+              
+              <span className="text-gray-400">|</span>
+              
+              <span className="text-xs text-gray-500 flex items-center">
+                마크다운 지원 (**굵게**, *기울임*, • 목록, 이미지)
+              </span>
+            </div>
+            
             <textarea
+              id="product-description"
               required
-              rows={5}
+              rows={8}
               value={productForm.description}
               onChange={(e) => handleProductFormChange('description', e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400"
-              placeholder="상품에 대한 자세한 설명을 입력하세요"
+              className="w-full px-3 py-2 border border-t-0 rounded-b-lg focus:outline-none focus:ring-2 focus:ring-rose-400 font-mono text-sm"
+              placeholder="상품에 대한 자세한 설명을 입력하세요.
+
+예시:
+**주요 특징:**
+• 고품질 소재 사용
+• 다양한 색상 선택 가능
+• *무료배송* 서비스 제공
+
+**사용법:**
+1. 첫 번째 단계
+2. 두 번째 단계"
             />
+            
+            {/* 미리보기 */}
+            {productForm.description && (
+              <div className="mt-2 p-3 bg-gray-50 border rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">미리보기:</p>
+                <div className="prose prose-sm max-w-none">
+                  {productForm.description
+                    .split('\n')
+                    .map((line, index) => {
+                      // 이미지 처리
+                      const imageMatch = line.match(/!\[([^\]]*)\]\(([^)]+)\)/);
+                      if (imageMatch) {
+                        const [, altText, src] = imageMatch;
+                        return (
+                          <div key={index} className="my-3">
+                            <img 
+                              src={src} 
+                              alt={altText} 
+                              className="max-w-full h-auto rounded-lg shadow-sm border"
+                              style={{ maxHeight: '300px' }}
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      // 굵게 처리
+                      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                      // 기울임 처리 (굵게가 아닌 경우만)
+                      line = line.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+                      
+                      // 목록 처리
+                      if (line.trim().startsWith('•')) {
+                        return <li key={index} dangerouslySetInnerHTML={{ __html: line.replace('•', '').trim() }} />;
+                      }
+                      // 번호 목록 처리
+                      if (/^\d+\./.test(line.trim())) {
+                        return <li key={index} dangerouslySetInnerHTML={{ __html: line.replace(/^\d+\./, '').trim() }} />;
+                      }
+                      // 빈 줄
+                      if (line.trim() === '') {
+                        return <br key={index} />;
+                      }
+                      // 일반 텍스트
+                      return <p key={index} dangerouslySetInnerHTML={{ __html: line }} />;
+                    })
+                  }
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 상품 이미지 */}
@@ -299,14 +504,47 @@ function SellerMyPage() {
                   <p className="text-sm text-gray-600">이미지를 드래그하거나 클릭하여 업로드</p>
                   <p className="text-xs text-gray-400">JPG, PNG 파일만 가능 (최대 5MB)</p>
                 </div>
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="inline-block px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
                 >
                   파일 선택
-                </button>
+                </label>
               </div>
             </div>
+            
+            {/* 업로드된 이미지 미리보기 */}
+            {productForm.images.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">업로드된 이미지:</p>
+                <div className="grid grid-cols-4 gap-4">
+                  {productForm.images.map((image, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(image)}
+                        alt={`상품 이미지 ${index + 1}`}
+                        className="w-full h-20 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleImageRemove(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 배송 정보 */}
@@ -368,19 +606,55 @@ function SellerMyPage() {
     switch (activeTab) {
       case '상품관리':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">상품 관리</h2>
                 <p className="text-gray-600">등록된 상품을 관리하고 수정할 수 있습니다</p>
+                <p className="text-sm text-blue-600">현재 {products.length}개의 상품이 있습니다</p>
               </div>
-              <button 
-                className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700"
-                onClick={() => setShowProductForm(true)}
-              >
-                <Plus className="w-4 h-4" />
-                상품 등록
-              </button>
+              <div className="flex gap-2">
+                {isDeleteMode && (
+                  <>
+                    <button
+                      className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+                      onClick={handleSelectAll}
+                    >
+                      전체 선택 ({selectedProducts.size}/{products.length})
+                    </button>
+                    <button
+                      className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                      onClick={handleDeleteSelected}
+                      disabled={selectedProducts.size === 0}
+                    >
+                      선택 삭제 ({selectedProducts.size})
+                    </button>
+                    <button
+                      className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+                      onClick={handleDeleteModeToggle}
+                    >
+                      취소
+                    </button>
+                  </>
+                )}
+                {!isDeleteMode && (
+                  <>
+                    <button 
+                      className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700"
+                      onClick={() => setShowProductForm(true)}
+                    >
+                      <Plus className="w-4 h-4" />
+                      상품 등록
+                    </button>
+                    <button
+                      className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                      onClick={handleDeleteModeToggle}
+                    >
+                      상품 삭제
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-4 p-4 bg-white rounded-lg border">
@@ -409,17 +683,39 @@ function SellerMyPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
+                      {isDeleteMode && (
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-16">
+                          <input
+                            type="checkbox"
+                            checked={selectedProducts.size === products.length && products.length > 0}
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300"
+                          />
+                        </th>
+                      )}
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">상품정보</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">가격</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">재고</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">조회수</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">주문수</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
+                      {!isDeleteMode && (
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">관리</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {products.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50">
+                        {isDeleteMode && (
+                          <td className="px-6 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedProducts.has(product.id)}
+                              onChange={() => handleProductSelect(product.id)}
+                              className="rounded border-gray-300"
+                            />
+                          </td>
+                        )}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <img src={product.image} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
@@ -439,16 +735,18 @@ function SellerMyPage() {
                         </td>
                         <td className="px-6 py-4 text-gray-900">{product.views.toLocaleString()}</td>
                         <td className="px-6 py-4 text-gray-900">{product.orders}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button className="p-1 text-gray-400 hover:text-blue-600">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="p-1 text-gray-400 hover:text-green-600">
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
+                        {!isDeleteMode && (
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <button className="p-1 text-gray-400 hover:text-blue-600">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="p-1 text-gray-400 hover:text-green-600">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -460,10 +758,11 @@ function SellerMyPage() {
 
       case '주문관리':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">주문 관리</h2>
+                <p className="text-sm text-blue-600">현재 {orders.length}개의 주문이 있습니다</p>
                 <p className="text-gray-600">고객 주문을 확인하고 처리할 수 있습니다</p>
               </div>
               <button className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50">
@@ -487,23 +786,31 @@ function SellerMyPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {recentOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 font-medium text-gray-900">#{order.id}</td>
-                        <td className="px-6 py-4 text-gray-900">{order.product}</td>
-                        <td className="px-6 py-4 text-gray-900">{order.customer}</td>
-                        <td className="px-6 py-4 text-gray-900">₩{order.amount.toLocaleString()}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs rounded-full ${order.statusColor}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">{order.time}</td>
-                        <td className="px-6 py-4">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm">처리</button>
+                    {orders.length > 0 ? (
+                      orders.map((order) => (
+                        <tr key={order.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 font-medium text-gray-900">#{order.id}</td>
+                          <td className="px-6 py-4 text-gray-900">{order.product}</td>
+                          <td className="px-6 py-4 text-gray-900">{order.customer}</td>
+                          <td className="px-6 py-4 text-gray-900">₩{order.amount.toLocaleString()}</td>
+                          <td className="px-6 py-4">
+                            <span className={`px-2 py-1 text-xs rounded-full ${order.statusColor}`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-gray-500">{order.time}</td>
+                          <td className="px-6 py-4">
+                            <button className="text-blue-600 hover:text-blue-800 text-sm">처리</button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                          주문이 없습니다.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -513,7 +820,7 @@ function SellerMyPage() {
 
       case '매출관리':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">매출 관리</h2>
@@ -560,7 +867,7 @@ function SellerMyPage() {
 
       case '고객관리':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">고객 관리</h2>
@@ -607,7 +914,7 @@ function SellerMyPage() {
 
       case '설정':
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 bg-white p-6 rounded-lg">
             <div>
               <h2 className="text-xl font-bold text-gray-900">판매자 설정</h2>
               <p className="text-gray-600">판매자 정보와 스토어 설정을 관리할 수 있습니다</p>
@@ -665,13 +972,84 @@ function SellerMyPage() {
 
       default:
         return (
-          <div className="text-center py-12">
+          <div className="bg-white p-6 rounded-lg text-center py-12">
             <h3 className="text-lg font-medium text-gray-900">선택된 메뉴</h3>
             <p className="text-gray-600 mt-2">{activeTab} 페이지입니다.</p>
           </div>
         );
     }
   };
+
+  // 상품 삭제 관련 함수들
+  const handleDeleteModeToggle = () => {
+    setIsDeleteMode(!isDeleteMode);
+    setSelectedProducts(new Set()); // 삭제 모드 토글시 선택 초기화
+  };
+
+  const handleProductSelect = (productId: number) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProducts.size === products.length) {
+      // 모든 상품이 선택된 경우 선택 해제
+      setSelectedProducts(new Set());
+    } else {
+      // 모든 상품 선택
+      const allProductIds = new Set(products.map(p => p.id));
+      setSelectedProducts(allProductIds);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!sellerId || selectedProducts.size === 0) {
+      alert('삭제할 상품을 선택해주세요.');
+      return;
+    }
+
+    const confirmed = window.confirm(`선택한 ${selectedProducts.size}개의 상품을 삭제하시겠습니까?`);
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+      const productIds = Array.from(selectedProducts);
+      
+      const result = await deleteProducts(sellerId, productIds);
+      
+      alert(result.message);
+      
+      // 상품 목록 새로고침
+      await loadProducts();
+      
+      // 삭제 모드 종료 및 선택 초기화
+      setIsDeleteMode(false);
+      setSelectedProducts(new Set());
+      
+    } catch (error) {
+      console.error('상품 삭제 실패:', error);
+      alert('상품 삭제에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // sellerId가 로드되지 않았으면 로딩 표시
+  if (!sellerId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">판매자 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -750,7 +1128,9 @@ function SellerMyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">오늘 조회수</p>
-                <p className="text-2xl font-bold text-gray-900">{todayStats.views.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {dashboardData?.todayStats.views.toLocaleString() || '0'}
+                </p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3" />
                   전일 대비 +12%
@@ -766,7 +1146,9 @@ function SellerMyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">오늘 주문</p>
-                <p className="text-2xl font-bold text-gray-900">{todayStats.orders}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {dashboardData?.todayStats.orders || 0}
+                </p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3" />
                   전일 대비 +8%
@@ -782,7 +1164,9 @@ function SellerMyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">오늘 매출</p>
-                <p className="text-2xl font-bold text-gray-900">₩{todayStats.sales.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ₩{dashboardData?.todayStats.sales.toLocaleString() || '0'}
+                </p>
                 <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
                   <TrendingUp className="w-3 h-3" />
                   전일 대비 +15%
@@ -798,7 +1182,9 @@ function SellerMyPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">신규 문의</p>
-                <p className="text-2xl font-bold text-gray-900">{todayStats.inquiries}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {dashboardData?.todayStats.inquiries || 0}
+                </p>
                 <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
                   <AlertCircle className="w-3 h-3" />
                   답변 대기중
@@ -811,8 +1197,7 @@ function SellerMyPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">최근 주문 현황</h3>
@@ -823,7 +1208,7 @@ function SellerMyPage() {
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {recentOrders.map((order) => (
+                {(dashboardData?.recentOrders || []).map((order) => (
                   <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
@@ -843,57 +1228,19 @@ function SellerMyPage() {
                     </div>
                   </div>
                 ))}
+                {(!dashboardData?.recentOrders || dashboardData.recentOrders.length === 0) && (
+                  <div className="text-center py-8 text-gray-500">
+                    최근 주문이 없습니다.
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">빠른 액션</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-3">
-                <button 
-                  className="w-full flex items-center gap-3 p-4 text-left bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
-                  onClick={() => setShowProductForm(true)}
-                >
-                  <Plus className="w-5 h-5 text-rose-600" />
-                  <div>
-                    <div className="font-medium text-rose-800">상품 등록</div>
-                    <div className="text-sm text-rose-600">새로운 상품을 등록하세요</div>
-                  </div>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Edit className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="font-medium text-gray-800">재고 관리</div>
-                    <div className="text-sm text-gray-600">상품 재고를 업데이트하세요</div>
-                  </div>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <MessageCircle className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="font-medium text-gray-800">문의 답변</div>
-                    <div className="text-sm text-gray-600">고객 문의에 답변하세요</div>
-                  </div>
-                </button>
-
-                <button className="w-full flex items-center gap-3 p-4 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                  <TrendingUp className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <div className="font-medium text-gray-800">매출 분석</div>
-                    <div className="text-sm text-gray-600">매출 통계를 확인하세요</div>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* 탭 컨텐츠 */}
-        {renderTabContent()}
+        <div className="mt-6">
+          {renderTabContent()}
+        </div>
 
         {/* 공지사항 및 안내 */}
         <div className="mt-6 bg-gradient-to-r from-rose-500 to-pink-500 rounded-xl shadow-sm text-white p-6">

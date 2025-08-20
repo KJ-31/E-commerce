@@ -1,5 +1,26 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthService, SignUpDto, SellerSignUpDto, LoginDto } from './auth.service';
+
+export class SignUpDto {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  address: string;
+}
+
+export class SellerSignUpDto extends SignUpDto {
+  companyName: string;
+  businessNumber: string;
+  companyPhone: string;
+  companyAddress: string;
+}
+
+export class LoginDto {
+  email: string;
+  password: string;
+  userType?: 'user' | 'seller';
+}
 
 @Controller('auth')
 export class AuthController {

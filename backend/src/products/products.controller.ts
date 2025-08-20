@@ -11,7 +11,15 @@ export class ProductsController {
     @Query('search') search?: string,
     @Query('limit') limit?: number
   ) {
-    return await this.productsService.getProducts(sort, search, limit);
+    if (search) {
+      return this.productsService.searchProducts(search);
+    }
+    return await this.productsService.getProducts(sort, undefined, limit);
+  }
+
+  @Get('all')
+  async getAllProducts() {
+    return this.productsService.getAllProducts();
   }
 
   @Get('featured')
@@ -26,5 +34,5 @@ export class ProductsController {
       throw new NotFoundException(`ID가 ${id}인 상품을 찾을 수 없습니다.`);
     }
     return product;
-}
+  }
 }
