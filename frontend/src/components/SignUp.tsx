@@ -22,7 +22,9 @@ const SignUp: React.FC<SignUpProps> = ({ navigateTo }) => {
     companyName: '',
     businessNumber: '',
     companyPhone: '',
-    companyAddress: ''
+    companyAddress: '',
+    companyPostcode: '',
+    companyDetailAddress: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,6 +43,24 @@ const SignUp: React.FC<SignUpProps> = ({ navigateTo }) => {
           ...prev,
           postcode: data.zonecode,
           address: addr,
+        }));
+      }
+    }).open();
+  };
+
+  const handleOpenCompanyPostcode = () => {
+    new (window as any).daum.Postcode({
+      oncomplete: function(data: any) {
+        let addr = '';
+        if (data.userSelectedType === 'R') {
+          addr = data.roadAddress;
+        } else {
+          addr = data.jibunAddress;
+        }
+        setFormData(prev => ({
+          ...prev,
+          companyPostcode: data.zonecode,
+          companyAddress: addr,
         }));
       }
     }).open();
@@ -66,11 +86,15 @@ const SignUp: React.FC<SignUpProps> = ({ navigateTo }) => {
     if (!formData.email) newErrors.email = '이메일을 입력해주세요.';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = '올바른 이메일 형식을 입력해주세요.';
     if (!formData.password) newErrors.password = '비밀번호를 입력해주세요.';
-    else if (formData.password.length < 6) newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
+    else if (formData.password.length < 8) newErrors.password = '비밀번호는 8자 이상이어야 합니다.';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = '비밀번호가 일치하지 않습니다.';
     if (!formData.name) newErrors.name = '이름을 입력해주세요.';
     if (!formData.phone) newErrors.phone = '전화번호를 입력해주세요.';
-    if (!formData.address) newErrors.address = '주소를 입력해주세요.';
+    else if (!/^[0-9]+$/.test(formData.phone)) newErrors.phone = '전화번호는 숫자만 입력 가능합니다.';
+
+    if (userType === 'general') {
+        if (!formData.address) newErrors.address = '주소를 입력해주세요.';
+    }
 
     if (userType === 'seller') {
       if (!formData.companyName) newErrors.companyName = '회사명을 입력해주세요.';
@@ -88,12 +112,20 @@ const SignUp: React.FC<SignUpProps> = ({ navigateTo }) => {
     if (!validateForm()) return;
     setIsSubmitting(true);
     
+    const submissionData = { ...formData };
+    if (userType === 'general') {
+        submissionData.address = `${formData.address} ${formData.detailAddress} (${formData.postcode})`.trim();
+    }
+    if (userType === 'seller') {
+        submissionData.companyAddress = `${formData.companyAddress} ${formData.companyDetailAddress} (${formData.companyPostcode})`.trim();
+    }
+
     try {
       const endpoint = userType === 'general' ? '/auth/signup' : '/auth/seller-signup';
       const response = await fetch(`http://localhost:3001${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       if (response.ok) {
@@ -175,48 +207,100 @@ const SignUp: React.FC<SignUpProps> = ({ navigateTo }) => {
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
             </div>
 
-            {/* 주소 입력 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
-              <div className="flex gap-2 mb-2">
+            {userType === 'general' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    name="postcode"
+                    value={formData.postcode}
+                    readOnly
+                    className="w-1/3 px-3 py-2 border rounded-md bg-gray-100"
+                    placeholder="우편번호"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleOpenPostcode}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                  >
+                    주소 검색
+                  </button>
+                </div>
                 <input
                   type="text"
-                  name="postcode"
-                  value={formData.postcode}
+                  name="address"
+                  value={formData.address}
                   readOnly
-                  className="w-1/3 px-3 py-2 border rounded-md bg-gray-100"
-                  placeholder="우편번호"
+                  className="w-full px-3 py-2 border rounded-md bg-gray-100 mb-2"
+                  placeholder="주소"
                 />
-                <button
-                  type="button"
-                  onClick={handleOpenPostcode}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                >
-                  주소 검색
-                </button>
+                <input
+                  type="text"
+                  name="detailAddress"
+                  value={formData.detailAddress}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="상세주소"
+                />
+                {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
               </div>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                readOnly
-                className="w-full px-3 py-2 border rounded-md bg-gray-100 mb-2"
-                placeholder="주소"
-              />
-              <input
-                type="text"
-                name="detailAddress"
-                value={formData.detailAddress}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md"
-                placeholder="상세주소"
-              />
-              {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-            </div>
+            )}
 
             {userType === 'seller' && (
               <>
-                {/* Seller fields... */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">회사명</label>
+                  <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md ${errors.companyName ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">사업자등록번호</label>
+                  <input type="text" name="businessNumber" value={formData.businessNumber} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md ${errors.businessNumber ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.businessNumber && <p className="text-red-500 text-sm mt-1">{errors.businessNumber}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">회사 전화번호</label>
+                  <input type="text" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} className={`w-full px-3 py-2 border rounded-md ${errors.companyPhone ? 'border-red-500' : 'border-gray-300'}`} />
+                  {errors.companyPhone && <p className="text-red-500 text-sm mt-1">{errors.companyPhone}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">회사 주소</label>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      name="companyPostcode"
+                      value={formData.companyPostcode}
+                      readOnly
+                      className="w-1/3 px-3 py-2 border rounded-md bg-gray-100"
+                      placeholder="우편번호"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleOpenCompanyPostcode}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+                    >
+                      주소 검색
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    name="companyAddress"
+                    value={formData.companyAddress}
+                    readOnly
+                    className="w-full px-3 py-2 border rounded-md bg-gray-100 mb-2"
+                    placeholder="회사 주소"
+                  />
+                  <input
+                    type="text"
+                    name="companyDetailAddress"
+                    value={formData.companyDetailAddress}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border rounded-md"
+                    placeholder="상세주소"
+                  />
+                  {errors.companyAddress && <p className="text-red-500 text-sm mt-1">{errors.companyAddress}</p>}
+                </div>
               </>
             )}
 
