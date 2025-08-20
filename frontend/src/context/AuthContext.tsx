@@ -2,11 +2,23 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 
 type UserType = 'general' | 'seller' | null;
 
+interface UserInfo {
+  user_id: number;
+  email: string;
+  user_name: string;
+  user_addr?: string;
+  user_phone_num?: string;
+}
+
 interface AuthContextType {
   isLoggedIn: boolean;
   userType: UserType;
+    
   token: string | null;
-  login: (type: UserType, token: string) => void;
+  userInfo: UserInfo | null;
+
+  login: (email: string, password: string, type?: UserType) => Promise<boolean>;
+    
   logout: () => void;
 }
 
@@ -14,9 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -53,10 +63,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoggedIn(false);
     setToken(null);
     setUserType(null);
+    setUserInfo(null);
+    sessionStorage.removeItem('userInfo');
+    sessionStorage.removeItem('userType');
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userType, token, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, userType, userInfo, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

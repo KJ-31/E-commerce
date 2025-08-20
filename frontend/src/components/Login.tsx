@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { login as authLogin } from '../services/authService';
 
 type LoginProps = {
   navigateTo?: (path: string) => void;
@@ -60,6 +61,10 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
     }
     
     try {
+      // AuthContext의 login 함수 사용 (이미 모든 로직이 포함되어 있음)
+      const success = await login(form.id, form.pw, userType);
+      
+      if (success) {
       const response = await fetch('http://localhost:3001/auth/login', {
         method: 'POST',
         headers: {
@@ -74,19 +79,24 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
 
       if (response.ok) {
         const data = await response.json();
+
         if (data.accessToken) {
           login(userType, data.accessToken);
           navigateTo?.('/');
         } else {
           alert('로그인에 성공했으나 토큰을 받지 못했습니다.');
+        
+        // 판매자인 경우 판매자 마이페이지로, 일반 사용자는 홈으로
+        if (userType === 'seller') {
+          navigateTo?.('/seller-mypage');
+        } else {
+          navigateTo?.('/');
         }
       } else {
-        const errorData = await response.json();
-        alert(errorData.message || '로그인에 실패했습니다.');
+        alert('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
-    } catch (error) {
-      console.error('로그인 오류:', error);
-      alert('로그인 중 오류가 발생했습니다.');
+    } catch (error: any) {
+      alert(error.message || '로그인에 실패했습니다.');
     }
   };
 
@@ -202,10 +212,10 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
             <a className="hover:text-gray-800" href="#">비회원 주문조회</a>
             <span>·</span>
             <button 
-              onClick={() => navigateTo?.('/signup')}
+              onClick={() => navigateTo?.(userType === 'seller' ? '/seller-signup' : '/signup')}
               className="hover:text-gray-800"
             >
-              회원가입
+              {userType === 'seller' ? '판매자 회원가입' : '회원가입'}
             </button>
           </div>
         </div>

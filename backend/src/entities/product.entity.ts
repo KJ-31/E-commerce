@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Category } from './category.entity';
 import { ProductImage } from './product-images.entity';
+import { Seller } from './seller.entity';
 
 @Entity('products')
 export class Product {
@@ -12,6 +13,9 @@ export class Product {
 
   @Column()
   category_id: number;
+
+  @Column({ nullable: true })
+  seller_id: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
   product_price: number;
@@ -40,4 +44,8 @@ export class Product {
 
   @OneToMany(() => ProductImage, productImage => productImage.product)
   productImages: ProductImage[];
+
+  @ManyToOne(() => Seller)
+  @JoinColumn({ name: 'seller_id' })
+  seller: Seller;
 }

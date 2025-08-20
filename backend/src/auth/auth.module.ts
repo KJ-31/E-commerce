@@ -5,12 +5,13 @@ import { JwtModule } from '@nestjs/jwt'; // New import
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '../entities/user.entity';
+import { Admin } from '../entities/admin.entity';
 import { Seller } from '../entities/seller.entity';
 import { JwtStrategy } from './jwt.strategy'; // New import
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Seller]),
+    TypeOrmModule.forFeature([User, Admin, Seller]),
     PassportModule.register({ defaultStrategy: 'jwt' }), // New line
     JwtModule.register({
       secret: 'yourSecretKey', // TODO: Use environment variable

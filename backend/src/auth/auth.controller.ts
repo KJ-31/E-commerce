@@ -1,9 +1,27 @@
-import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common'; // Modified
+import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus } from '@nestjs/common'; // Modified
 import { AuthGuard } from '@nestjs/passport'; // New import
-import { AuthService } from './auth.service';
-import { SignUpDto } from './dto/signup.dto';
-import { SellerSignUpDto } from './dto/seller-signup.dto';
-import { LoginDto } from './dto/login.dto';
+import { AuthService, SignUpDto, SellerSignUpDto, LoginDto } from './auth.service';
+
+export class SignUpDto {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  address: string;
+}
+
+export class SellerSignUpDto extends SignUpDto {
+  companyName: string;
+  businessNumber: string;
+  companyPhone: string;
+  companyAddress: string;
+}
+
+export class LoginDto {
+  email: string;
+  password: string;
+  userType?: 'user' | 'seller';
+}
 
 @Controller('auth')
 export class AuthController {

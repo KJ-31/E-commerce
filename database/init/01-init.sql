@@ -46,6 +46,7 @@ BEGIN
             product_id SERIAL PRIMARY KEY,
             product_name VARCHAR(255) NOT NULL,
             category_id INTEGER REFERENCES categories(category_id),
+            seller_id INTEGER REFERENCES sellers(seller_id),
             product_price DECIMAL(10,2) NOT NULL,
             company VARCHAR(100),
             description TEXT,

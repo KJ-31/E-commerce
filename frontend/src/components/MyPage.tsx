@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getDashboardData, UserInfo, OrderStats, Order, Benefits } from '../services/mypageService';
+import { useAuth } from '../context/AuthContext';
 
 type MyPageProps = {
   navigateTo?: (path: string) => void;
 };
 
 const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
+  const { userInfo: authUserInfo } = useAuth();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -16,23 +18,47 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        console.log('마이페이지 데이터 조회 시작');
+        console.log('AuthContext 사용자 정보:', authUserInfo);
+        
         setLoading(true);
-        const data = await getDashboardData();
-        setUserInfo(data.userInfo);
-        setOrderStats(data.orderStats);
-        setRecentOrders(data.recentOrders);
-        setBenefits(data.benefits);
+        
+        // AuthContext에서 사용자 정보가 있으면 사용
+        if (authUserInfo) {
+          console.log('AuthContext에서 사용자 정보 설정');
+          setUserInfo({
+            user_id: authUserInfo.user_id,
+            email: authUserInfo.email,
+            user_name: authUserInfo.user_name,
+            user_addr: authUserInfo.user_addr || '',
+            user_phone_num: authUserInfo.user_phone_num || '',
+            created_at: new Date().toISOString()
+          });
+        }
+        
+        // 실제 사용자 ID로 주문 데이터 조회
+        if (authUserInfo?.user_id) {
+          console.log('사용자 ID로 주문 데이터 조회:', authUserInfo.user_id);
+          const data = await getDashboardData(authUserInfo.user_id);
+          console.log('주문 데이터 조회 결과:', data);
+          setOrderStats(data.orderStats);
+          setRecentOrders(data.recentOrders);
+          setBenefits(data.benefits);
+        } else {
+          console.log('AuthContext에 사용자 ID가 없음');
+        }
+        
         setError(null);
       } catch (err) {
+        console.error('마이페이지 데이터 조회 오류:', err);
         setError('데이터를 불러오는데 실패했습니다.');
-        console.error('Dashboard data fetch error:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []);
+  }, [authUserInfo]);
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -74,10 +100,26 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
             {/* 상단 메뉴 */}
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">4 찌개</span>
-              <button className="p-2 hover:bg-gray-100 rounded">👤</button>
-              <button className="p-2 hover:bg-gray-100 rounded">🚚</button>
-              <button className="p-2 hover:bg-gray-100 rounded">🛒</button>
-              <button className="p-2 hover:bg-gray-100 rounded">📚</button>
+              <button className="p-2 hover:bg-gray-100 rounded">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </button>
               <span className="text-sm text-blue-600">앱 다운로드</span>
             </div>
           </div>
@@ -86,7 +128,7 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center space-x-4">
               <span className="font-medium">
-                {loading ? '로딩 중...' : userInfo?.user_name || '사용자'}님
+                {authUserInfo?.user_name || userInfo?.user_name || '사용자'}님
               </span>
               <button className="text-sm bg-blue-500 text-white px-3 py-1 rounded">바로가기 ON</button>
             </div>
@@ -112,7 +154,11 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
           <div className="w-64 bg-white rounded-lg shadow-sm p-6">
             {/* 사용자 프로필 */}
             <div className="text-center mb-6">
-              <div className="text-4xl mb-2">☀️</div>
+              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
               <div className="font-semibold text-lg">
                 {loading ? '로딩 중...' : userInfo?.user_name || '사용자'}님
               </div>
@@ -213,31 +259,51 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
               
               {/* 단계별 주문 현황 */}
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-8">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-2">📋</div>
-                    <div className="text-sm text-gray-600">입금대기중</div>
-                    <div className="font-semibold">{loading ? '...' : orderStats?.pending || 0}건</div>
+                <div className="flex items-center space-x-4">
+                  <div className="text-center w-20">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-600">입금대기중</div>
+                    <div className="font-semibold text-sm">{loading ? '...' : orderStats?.pending || 0}건</div>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center mb-2">💳</div>
-                    <div className="text-sm text-gray-600">결제완료</div>
-                    <div className="font-semibold">{loading ? '...' : orderStats?.paid || 0}건</div>
+                  <div className="text-center w-20">
+                    <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-600">결제완료</div>
+                    <div className="font-semibold text-sm">{loading ? '...' : orderStats?.paid || 0}건</div>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center mb-2">📦</div>
-                    <div className="text-sm text-gray-600">배송준비중</div>
-                    <div className="font-semibold">{loading ? '...' : orderStats?.preparing || 0}건</div>
+                  <div className="text-center w-20">
+                    <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-600">배송준비중</div>
+                    <div className="font-semibold text-sm">{loading ? '...' : orderStats?.preparing || 0}건</div>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center mb-2">🚚</div>
-                    <div className="text-sm text-gray-600">배송중</div>
-                    <div className="font-semibold">{loading ? '...' : orderStats?.shipping || 0}건</div>
+                  <div className="text-center w-20">
+                    <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-600">배송중</div>
+                    <div className="font-semibold text-sm">{loading ? '...' : orderStats?.shipping || 0}건</div>
                   </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-rose-200 rounded-full flex items-center justify-center mb-2">✅</div>
-                    <div className="text-sm text-gray-600">배송완료</div>
-                    <div className="font-semibold">{loading ? '...' : orderStats?.completed || 0}건</div>
+                  <div className="text-center w-20">
+                    <div className="w-12 h-12 bg-rose-200 rounded-full flex items-center justify-center mb-2 mx-auto">
+                      <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-xs text-gray-600">배송완료</div>
+                    <div className="font-semibold text-sm">{loading ? '...' : orderStats?.completed || 0}건</div>
                   </div>
                 </div>
                 
@@ -289,7 +355,7 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
                       ) : recentOrders.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                            최근 주문/배송 조회 내역이 없습니다.
+                            최근 주문/배송 조회 내역이 없습니다. (recentOrders 길이: {recentOrders.length})
                           </td>
                         </tr>
                       ) : (
