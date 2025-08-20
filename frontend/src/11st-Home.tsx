@@ -313,31 +313,6 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-3 pb-4">
-          <form
-            className="relative flex-1"
-            onSubmit={(e) => {
-              e.preventDefault();
-              // 검색은 실시간으로 처리됨 (useEffect에서 query 변경 감지)
-            }}
-            role="search"
-            aria-label="사이트 검색"
-          >
-            <input
-              id="search-input"
-              name="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="브랜드, 상품, 카테고리 검색"
-              className="w-full rounded-2xl border px-5 py-3 pr-12 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-            />
-            <button
-              type="submit"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-lg"
-              aria-label="검색"
-            >
-              <Search className="w-5 h-5 text-gray-400" />
-            </button>
-          </form>
           
           <nav className="flex items-center gap-4">
             {CATEGORIES.map((category) => (
