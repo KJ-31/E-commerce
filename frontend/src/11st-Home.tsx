@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from './context/AuthContext';
 import { productService, Product } from './services/productService';
+import { cartService } from './services/cartService';
 
 /**
  * 11번가 메인 페이지 느낌의 반응형 홈 스켈레톤 (TypeScript + TSX)
@@ -109,6 +110,21 @@ type HeaderProps = {
 };
 function Header({ query, setQuery, navigateTo }: HeaderProps) {
   const { isLoggedIn, userType, logout } = useAuth();
+  const [cartCount, setCartCount] = useState(cartService.getCartItemCount());
+
+  // 장바구니 개수 업데이트를 위한 이벤트 리스너
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartCount(cartService.getCartItemCount());
+    };
+
+    // 커스텀 이벤트 리스너 추가
+    window.addEventListener('cartUpdated', updateCartCount);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -118,14 +134,14 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
   const handleMyPageClick = () => {
     if (!isLoggedIn) {
       alert('로그인 후 이용 가능합니다.');
-      navigateTo('/login');
+      navigateTo?.('/login');
       return;
     }
     
     if (userType === 'seller') {
-      navigateTo('/seller/mypage');
+      navigateTo?.('/seller/mypage');
     } else {
-      navigateTo('/mypage');
+      navigateTo?.('/mypage');
     }
   };
 
@@ -209,10 +225,15 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
                 )}
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+              <button 
+                onClick={() => navigateTo?.('/cart')}
+                className="p-2 hover:bg-gray-100 rounded-lg relative"
+              >
                 <ShoppingCart className="w-5 h-5" />
-                {isLoggedIn && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">2</span>
+                {isLoggedIn && cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
                 )}
               </button>
               <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
@@ -350,6 +371,19 @@ function SectionHeader({ title, subtitle, right }: SectionHeaderProps) {
 
 function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string) => void }) {
   const discounted = Math.round(p.price * (1 - p.sale / 100));
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    cartService.addToCart(p, 1);
+    
+    // 장바구니 업데이트 이벤트 발생
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    
+    alert('장바구니에 추가되었습니다!');
+  };
+
   return (
     <motion.a
       href={`/product/${p.id}`} // 상품 상세 페이지 링크 추가
@@ -370,6 +404,15 @@ function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string)
             {p.sale}%
           </div>
         ) : null}
+        
+        {/* 장바구니 담기 버튼 */}
+        <button
+          onClick={handleAddToCart}
+          className="absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-md hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+          title="장바구니에 담기"
+        >
+          <ShoppingCart className="w-4 h-4 text-gray-700" />
+        </button>
       </div>
       <div className="space-y-1.5 p-3">
         <div className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold">
@@ -388,8 +431,16 @@ function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string)
           ))}
         </div>
         <div className="text-xs text-amber-600">★ {p.rating}</div>
+        
+        {/* 하단 장바구니 버튼 */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full mt-2 bg-rose-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-rose-600 transition-colors"
+        >
+          장바구니 담기
+        </button>
       </div>
-    </motion.a>
+    </motion.div>
   );
 }
 
