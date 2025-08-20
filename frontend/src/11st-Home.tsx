@@ -348,11 +348,15 @@ function SectionHeader({ title, subtitle, right }: SectionHeaderProps) {
   );
 }
 
-function ProductCard({ p }: { p: Product }) {
+function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string) => void }) {
   const discounted = Math.round(p.price * (1 - p.sale / 100));
   return (
     <motion.a
-      href="#"
+      href={`/product/${p.id}`} // 상품 상세 페이지 링크 추가
+      onClick={(e) => {
+        e.preventDefault();
+        navigateTo(`/product/${p.id}`);
+      }}
       className="group relative block overflow-hidden rounded-2xl border bg-white shadow-sm"
       initial={{ y: 8, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
@@ -412,7 +416,7 @@ function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => v
   );
 }
 
-function DealsGrid({ query }: { query: string }) {
+function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: string) => void }) {
   const [sort, setSort] = useState<SortKey>("best");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -472,7 +476,7 @@ function DealsGrid({ query }: { query: string }) {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {products.map((p) => (
-          <ProductCard key={p.id} p={p} />
+          <ProductCard key={p.id} p={p} navigateTo={navigateTo} />
         ))}
       </div>
     </section>
@@ -557,7 +561,7 @@ function Footer() {
 }
 
 type ElevenStreetHomeProps = {
-  navigateTo?: (path: string) => void;
+  navigateTo: (path: string) => void; // navigateTo를 필수로 변경
 };
 
 export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps) {
@@ -570,7 +574,7 @@ export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps) 
       <main className="space-y-10 md:space-y-14">
         <HeroCarousel />
         <PromoTiles />
-        <DealsGrid query={query} />
+        <DealsGrid query={query} navigateTo={navigateTo} />
       </main>
       <Footer />
     </div>
