@@ -69,5 +69,18 @@ export const productService = {
       console.error('인기 상품 조회 오류:', error);
       return [];
     }
+  },
+
+  async getRelatedProducts(id: number): Promise<Product[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/products/${id}/related`);
+      if (!response.ok) {
+        throw new Error('관련 상품을 가져오는데 실패했습니다.');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error(`관련 상품 조회 오류 (ID: ${id}):`, error);
+      return [];
+    }
   }
 };

@@ -35,4 +35,10 @@ export class ProductsController {
     }
     return product;
   }
+
+  @Get(':id/related')
+  async getRelatedProducts(@Param('id') id: number) {
+    const relatedProducts = await this.productsService.getRelatedProducts(id);
+    return relatedProducts;
+  }
 }
