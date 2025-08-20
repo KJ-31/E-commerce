@@ -9,11 +9,16 @@ type LoginProps = {
 type Form = { id: string; pw: string; keep: boolean };
 type Errors = { id?: string; pw?: string };
 
-function Logo() {
+function Logo({ navigateTo }: { navigateTo?: (path: string) => void }) {
   return (
     <div className="flex justify-center">
       {/* 단순한 11 로고 모사 (SVG 대체 가능) */}
-      <div className="text-4xl font-extrabold text-rose-500 tracking-tight select-none">11ST</div>
+      <div 
+        className="text-4xl font-extrabold text-rose-500 tracking-tight cursor-pointer hover:text-rose-600 transition-colors"
+        onClick={() => navigateTo?.('/')}
+      >
+        11ST
+      </div>
     </div>
   );
 }
@@ -104,7 +109,7 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
           {/* 카드 영역 */}
           <div className="mt-16 rounded-2xl border border-gray-200 shadow-lg bg-white">
             <div className="mx-auto max-w-md p-10">
-              <Logo />
+              <Logo navigateTo={navigateTo} />
 
               {/* 사용자 타입 선택 */}
               <div className="flex mt-6 mb-4">

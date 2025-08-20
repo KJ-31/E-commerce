@@ -26,11 +26,12 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
   // 실제 장바구니 데이터 로드
   useEffect(() => {
     loadCartItems();
-  }, []);
+  }, [userInfo]);
 
   // 장바구니 아이템 로드
   const loadCartItems = () => {
-    const items = cartService.getCart();
+    const userId = userInfo?.user_id;
+    const items = cartService.getCart(userId);
     setCartItems(items);
     console.log('장바구니 아이템 로드됨:', items);
   };
@@ -65,7 +66,8 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
     
     const item = cartItems.find(item => item.id === itemId);
     if (item) {
-      cartService.updateQuantity(item.productId, newQuantity);
+      const userId = userInfo?.user_id;
+      cartService.updateQuantity(item.productId, newQuantity, userId);
       loadCartItems(); // 장바구니 다시 로드
       
       // 장바구니 업데이트 이벤트 발생
@@ -77,7 +79,8 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
   const handleDeleteItem = (itemId: number) => {
     const item = cartItems.find(item => item.id === itemId);
     if (item) {
-      cartService.removeFromCart(item.productId);
+      const userId = userInfo?.user_id;
+      cartService.removeFromCart(item.productId, userId);
       loadCartItems(); // 장바구니 다시 로드
       setSelectedItems(selectedItems.filter(id => id !== itemId));
       
@@ -94,10 +97,11 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
     }
     
     if (window.confirm('선택한 상품을 삭제하시겠습니까?')) {
+      const userId = userInfo?.user_id;
       selectedItems.forEach(itemId => {
         const item = cartItems.find(item => item.id === itemId);
         if (item) {
-          cartService.removeFromCart(item.productId);
+          cartService.removeFromCart(item.productId, userId);
         }
       });
       
@@ -187,10 +191,11 @@ const Cart: React.FC<CartProps> = ({ navigateTo }) => {
       navigateTo(`/order-complete?orderId=${orderResult.orderId}`);
       
       // 장바구니에서 주문된 상품들 제거
+      const userId = userInfo?.user_id;
       selectedItems.forEach(itemId => {
         const item = cartItems.find(item => item.id === itemId);
         if (item) {
-          cartService.removeFromCart(item.productId);
+          cartService.removeFromCart(item.productId, userId);
         }
       });
       

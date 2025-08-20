@@ -31,14 +31,24 @@ export class SellersController {
   @UseInterceptors(FilesInterceptor('images', 10))
   async createProduct(
     @Param('sellerId') sellerId: number,
-    @Body() createProductDto: CreateProductDto,
+    @Body() body: any,
     @UploadedFiles() images?: any[]
   ) {
     console.log('Received product creation request for seller:', sellerId);
-    console.log('Product data:', createProductDto);
+    console.log('Body:', body);
     console.log('Images:', images?.length || 0, 'files');
     
     try {
+      // FormData에서 productData 파싱
+      let createProductDto: CreateProductDto;
+      if (body.productData) {
+        createProductDto = JSON.parse(body.productData);
+      } else {
+        createProductDto = body;
+      }
+      
+      console.log('Parsed product data:', createProductDto);
+      
       const result = await this.sellersService.createProduct(sellerId, createProductDto, images);
       console.log('Product creation successful:', result);
       return result;

@@ -55,7 +55,7 @@ export class OrdersService {
       const order = this.orderRepository.create({
         user_id: createOrderDto.userId,
         total_price: createOrderDto.totalPrice,
-        order_status: 'completed',
+        order_status: '결제완료', // 결제 완료 상태로 변경
       });
       
       const savedOrder = await queryRunner.manager.save(Order, order);
@@ -89,7 +89,11 @@ export class OrdersService {
         orderItems.push(orderItem);
 
         // 재고 차감
-        await queryRunner.manager.update(Product, item.productId, {
+        if (!item.productId) {
+          throw new Error('Product ID is required for stock update');
+        }
+        
+        await queryRunner.manager.update(Product, { product_id: item.productId }, {
           quantity: product.quantity - item.quantity
         });
       }

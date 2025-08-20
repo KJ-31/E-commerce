@@ -109,14 +109,18 @@ type HeaderProps = {
   navigateTo?: (path: string) => void;
 };
 function Header({ query, setQuery, navigateTo }: HeaderProps) {
-  const { isLoggedIn, userType, logout } = useAuth();
-  const [cartCount, setCartCount] = useState(cartService.getCartItemCount());
+  const { isLoggedIn, userType, logout, userInfo } = useAuth();
+  const [cartCount, setCartCount] = useState(0);
 
   // 장바구니 개수 업데이트를 위한 이벤트 리스너
   useEffect(() => {
     const updateCartCount = () => {
-      setCartCount(cartService.getCartItemCount());
+      const userId = userInfo?.user_id;
+      setCartCount(cartService.getCartItemCount(userId));
     };
+
+    // 초기 로드 시 장바구니 개수 설정
+    updateCartCount();
 
     // 커스텀 이벤트 리스너 추가
     window.addEventListener('cartUpdated', updateCartCount);
@@ -124,7 +128,7 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
     return () => {
       window.removeEventListener('cartUpdated', updateCartCount);
     };
-  }, []);
+  }, [userInfo]);
 
   const handleLogout = () => {
     logout();
@@ -151,7 +155,12 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
         <div className="flex items-center justify-between py-4">
           {/* 로고 */}
           <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-black text-rose-600">11ST</h1>
+            <h1 
+              className="text-2xl font-black text-rose-600 cursor-pointer hover:text-rose-700 transition-colors"
+              onClick={() => navigateTo?.('/')}
+            >
+              11ST
+            </h1>
             
             {/* 검색바 */}
             <div className="relative hidden md:block">
@@ -221,9 +230,6 @@ function Header({ query, setQuery, navigateTo }: HeaderProps) {
             <div className="flex items-center gap-2">
               <button className="p-2 hover:bg-gray-100 rounded-lg relative">
                 <Heart className="w-5 h-5" />
-                {isLoggedIn && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-                )}
               </button>
               <button 
                 onClick={() => navigateTo?.('/cart')}
@@ -398,12 +404,16 @@ function SectionHeader({ title, subtitle, right }: SectionHeaderProps) {
 
 function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string) => void }) {
   const discounted = Math.round(p.price * (1 - p.sale / 100));
+  const { userInfo } = useAuth();
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    cartService.addToCart(p, 1);
+    // AuthContext에서 사용자 ID 가져오기
+    const userId = userInfo?.user_id;
+    
+    cartService.addToCart(p, 1, userId);
     
     // 장바구니 업데이트 이벤트 발생
     window.dispatchEvent(new CustomEvent('cartUpdated'));

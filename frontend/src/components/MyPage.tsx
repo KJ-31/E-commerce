@@ -84,7 +84,12 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
           <div className="flex items-center justify-between py-4">
             {/* 로고 및 검색 */}
             <div className="flex items-center space-x-6">
-              <div className="font-black text-2xl text-rose-600">11ST</div>
+              <div 
+                className="font-black text-2xl text-rose-600 cursor-pointer hover:text-rose-700 transition-colors"
+                onClick={() => navigateTo?.('/')}
+              >
+                11ST
+              </div>
               <div className="relative">
                 <input
                   type="text"
@@ -99,7 +104,6 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
             
             {/* 상단 메뉴 */}
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">4 찌개</span>
               <button className="p-2 hover:bg-gray-100 rounded">
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -330,7 +334,7 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
               </div>
               
               <div className="p-6">
-                <h3 className="text-lg font-semibold mb-4">최근 주문 3건(6개월 내)</h3>
+                <h3 className="text-lg font-semibold mb-4">최근 주문 {recentOrders.length}건(6개월 내)</h3>
                 
                 {/* 주문 정보 테이블 */}
                 <div className="overflow-x-auto">
@@ -383,13 +387,15 @@ const MyPage: React.FC<MyPageProps> = ({ navigateTo }) => {
                             <td className="px-4 py-3 text-sm">무료</td>
                             <td className="px-4 py-3 text-sm">
                               <span className={`px-2 py-1 rounded text-xs ${
-                                order.order_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                order.order_status === 'shipping' ? 'bg-blue-100 text-blue-800' :
+                                order.order_status === '배송완료' || order.order_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                order.order_status === '배송중' || order.order_status === 'shipping' ? 'bg-blue-100 text-blue-800' :
+                                order.order_status === '결제완료' || order.order_status === 'paid' ? 'bg-blue-100 text-blue-800' :
                                 'bg-gray-100 text-gray-800'
                               }`}>
-                                {order.order_status === 'completed' ? '배송완료' :
-                                 order.order_status === 'shipping' ? '배송중' :
-                                 order.order_status === 'pending' ? '입금대기' :
+                                {order.order_status === '배송완료' || order.order_status === 'completed' ? '배송완료' :
+                                 order.order_status === '배송중' || order.order_status === 'shipping' ? '배송중' :
+                                 order.order_status === '결제완료' || order.order_status === 'paid' ? '결제완료' :
+                                 order.order_status === '주문접수' || order.order_status === 'pending' ? '주문접수' :
                                  order.order_status}
                               </span>
                             </td>

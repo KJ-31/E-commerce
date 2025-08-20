@@ -205,6 +205,34 @@ export class SellersService {
         console.log('Created category:', category);
       }
 
+      // 이미지 처리
+      let mainImg = 'https://picsum.photos/seed/default/600/600';
+      if (images && images.length > 0) {
+        try {
+          // 업로드 디렉토리 생성
+          const uploadDir = path.join(process.cwd(), 'uploads', 'products');
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+
+          // 첫 번째 이미지를 메인 이미지로 저장
+          const firstImage = images[0];
+          const fileName = `product_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+          const filePath = path.join(uploadDir, fileName);
+          
+          // 이미지 파일 저장
+          fs.writeFileSync(filePath, firstImage.buffer);
+          
+          // 웹에서 접근 가능한 URL 생성
+          mainImg = `/uploads/products/${fileName}`;
+          console.log('Saved image to:', mainImg);
+        } catch (error) {
+          console.error('Image save error:', error);
+          // 이미지 저장 실패 시 기본 이미지 사용
+          mainImg = 'https://picsum.photos/seed/default/600/600';
+        }
+      }
+
       // 상품 생성
       const productData = {
         product_name: createProductDto.name,
@@ -214,7 +242,7 @@ export class SellersService {
         company: createProductDto.brand || '',
         description: createProductDto.description || '',
         quantity: Number(createProductDto.stock) || 0,
-        main_img: 'https://picsum.photos/seed/default/600/600'
+        main_img: mainImg
       };
 
       console.log('Creating product with data:', productData);
