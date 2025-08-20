@@ -1,20 +1,26 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Link,
-  Search,
-  ShoppingCart,
-  Bell,
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { 
+  Search, 
+  ShoppingCart, 
+  Heart, 
+  User, 
+  Menu, 
+  ChevronDown, 
+  Star, 
+  Truck, 
+  Shield, 
+  RotateCcw,
+  ArrowRight,
+  Phone,
+  Mail,
+  MapPin,
   ChevronLeft,
-  ChevronRight,
-  Menu,
-  Heart,
-  User,
-  Truck,
-  Gift,
-  Headphones,
-  Tag,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from './context/AuthContext';
+import { productService, Product } from './services/productService';
+import { cartService } from './services/cartService';
 
 /**
  * 11번가 메인 페이지 느낌의 반응형 홈 스켈레톤 (TypeScript + TSX)
@@ -26,26 +32,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type Category = { name: string; icon: React.ReactNode };
 type Slide = { id: number; title: string; subtitle: string; img: string; bg: string };
-type Product = {
-  id: number;
-  brand: string;
-  name: string;
-  price: number;
-  sale: number; // percent
-  rating: string;
-  img: string;
-  tags: string[];
-};
 
 const CATEGORIES: Category[] = [
-  { name: "패션", icon: <Tag className="w-5 h-5" aria-hidden /> },
-  { name: "뷰티", icon: <Gift className="w-5 h-5" aria-hidden /> },
-  { name: "디지털", icon: <Headphones className="w-5 h-5" aria-hidden /> },
+  { name: "패션", icon: <Shield className="w-5 h-5" aria-hidden /> },
+  { name: "뷰티", icon: <Star className="w-5 h-5" aria-hidden /> },
+  { name: "디지털", icon: <RotateCcw className="w-5 h-5" aria-hidden /> },
   { name: "가전", icon: <Truck className="w-5 h-5" aria-hidden /> },
-  { name: "식품", icon: <Gift className="w-5 h-5" aria-hidden /> },
-  { name: "리빙", icon: <Tag className="w-5 h-5" aria-hidden /> },
-  { name: "스포츠", icon: <Headphones className="w-5 h-5" aria-hidden /> },
-  { name: "도서", icon: <Gift className="w-5 h-5" aria-hidden /> },
+  { name: "식품", icon: <Star className="w-5 h-5" aria-hidden /> },
+  { name: "리빙", icon: <Shield className="w-5 h-5" aria-hidden /> },
+  { name: "스포츠", icon: <RotateCcw className="w-5 h-5" aria-hidden /> },
+  { name: "도서", icon: <Star className="w-5 h-5" aria-hidden /> },
   { name: "티켓/여행", icon: <Truck className="w-5 h-5" aria-hidden /> },
 ];
 
@@ -73,38 +69,20 @@ const SLIDES: Slide[] = [
   },
 ];
 
-const MOCK_PRODUCTS: Product[] = Array.from({ length: 12 }).map((_, i) => ({
-  id: i + 1,
-  brand: ["삼성", "LG", "Apple", "Nike", "Adidas", "무인양품"][i % 6]!,
-  name: [
-    "모던 무선 청소기",
-    "USB-C 이어폰",
-    "울트라런닝화",
-    "무선 블루투스 스피커",
-    "홈카페 글라스컵 세트",
-    "각도조절 스탠드 조명",
-  ][i % 6]!,
-  price: 10000 + i * 1350,
-  sale: [5, 10, 15, 20][i % 4]!,
-  rating: (Math.round((3.5 + (i % 15) / 10) * 10) / 10).toFixed(1),
-  img: `https://picsum.photos/seed/p${i + 12}/600/600`,
-  tags: i % 2 === 0 ? ["무료배송", "오늘출발"] : ["쿠폰", "베스트"],
-}));
-
 function currency(n: number): string {
   return n.toLocaleString("ko-KR");
 }
 
 type WithChildren = { children: React.ReactNode };
 
-const Pill: React.FC<WithChildren> = ({ children }) => (
+const Pill = ({ children }: WithChildren) => (
   <span className="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium text-gray-700 bg-white/80 shadow-sm">
     {children}
   </span>
 );
 
 type IconBtnProps = { label: string; onClick?: () => void } & WithChildren;
-const IconBtn: React.FC<IconBtnProps> = ({ label, children, onClick }) => (
+const IconBtn = ({ label, children, onClick }: IconBtnProps) => (
   <button
     onClick={onClick}
     className="inline-flex items-center gap-2 rounded-2xl border bg-white/80 px-3 py-2 text-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-400"
@@ -114,7 +92,7 @@ const IconBtn: React.FC<IconBtnProps> = ({ label, children, onClick }) => (
   </button>
 );
 
-function TopNotice(): JSX.Element {
+function TopNotice() {
   return (
     <div className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-sm">
       <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
@@ -130,36 +108,138 @@ type HeaderProps = {
   setQuery: React.Dispatch<React.SetStateAction<string>>;
   navigateTo?: (path: string) => void;
 };
-function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element {
+function Header({ query, setQuery, navigateTo }: HeaderProps) {
+  const { isLoggedIn, userType, logout } = useAuth();
+  const [cartCount, setCartCount] = useState(cartService.getCartItemCount());
+
+  // 장바구니 개수 업데이트를 위한 이벤트 리스너
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartCount(cartService.getCartItemCount());
+    };
+
+    // 커스텀 이벤트 리스너 추가
+    window.addEventListener('cartUpdated', updateCartCount);
+    
+    return () => {
+      window.removeEventListener('cartUpdated', updateCartCount);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    alert('로그아웃되었습니다.');
+  };
+
+  const handleMyPageClick = () => {
+    if (!isLoggedIn) {
+      alert('로그인 후 이용 가능합니다.');
+      navigateTo?.('/login');
+      return;
+    }
+    
+    if (userType === 'seller') {
+      navigateTo?.('/seller/mypage');
+    } else {
+      navigateTo?.('/mypage');
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
-      <div className="mx-auto max-w-screen-2xl px-4">
-        <div className="flex items-center gap-3 py-3">
-          <button className="md:hidden p-2 rounded-xl hover:bg-gray-100" aria-label="메뉴 열기">
-            <Menu className="w-6 h-6" />
-          </button>
-          <a href="#" className="font-black text-2xl tracking-tight text-rose-600 select-none">
-            11ST
-          </a>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between py-4">
+          {/* 로고 */}
+          <div className="flex items-center gap-8">
+            <h1 className="text-2xl font-black text-rose-600">11ST</h1>
+            
+            {/* 검색바 */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="검색어를 입력하세요"
+                className="w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+              />
+            </div>
+          </div>
 
-          <div className="flex-1" />
+          {/* 우측 메뉴 */}
+          <div className="flex items-center gap-4">
+            {/* 모바일 검색 */}
+            <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+              <Search className="w-5 h-5" />
+            </button>
 
-          <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
-            <button 
-              onClick={() => navigateTo ? navigateTo('/login') : window.location.href = '/login'}
-              className="hover:text-rose-600"
-            >
-              로그인
-            </button>
-            <span className="text-gray-300">|</span>
-            <button 
-              onClick={() => navigateTo ? navigateTo('/signup') : window.location.href = '/signup'}
-              className="hover:text-rose-600"
-            >
-              회원가입
-            </button>
-            <span className="text-gray-300">|</span>
-            <a className="hover:text-rose-600" href="#">고객센터</a>
+            {/* 데스크톱 메뉴 */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
+              {isLoggedIn ? (
+                <>
+                  <span className="font-medium">
+                    {userType === 'seller' ? '셀러' : '사용자'}님 환영합니다!
+                  </span>
+                  <button 
+                    onClick={handleMyPageClick}
+                    className="hover:text-rose-600"
+                  >
+                    마이페이지
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button 
+                    onClick={handleLogout}
+                    className="hover:text-rose-600"
+                  >
+                    로그아웃
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <a className="hover:text-rose-600" href="#">고객센터</a>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => navigateTo?.('/login')}
+                    className="hover:text-rose-600"
+                  >
+                    로그인
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button 
+                    onClick={() => navigateTo?.('/signup')}
+                    className="hover:text-rose-600"
+                  >
+                    회원가입
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <a className="hover:text-rose-600" href="#">고객센터</a>
+                </>
+              )}
+            </div>
+
+            {/* 아이콘 메뉴 */}
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                <Heart className="w-5 h-5" />
+                {isLoggedIn && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                )}
+              </button>
+              <button 
+                onClick={() => navigateTo?.('/cart')}
+                className="p-2 hover:bg-gray-100 rounded-lg relative"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {isLoggedIn && cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+              <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -182,48 +262,21 @@ function Header({ query, setQuery, navigateTo }: HeaderProps): React.JSX.Element
               className="w-full rounded-2xl border px-5 py-3 pr-12 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
             />
             <button
-              type="submit"
-              className="absolute right-1.5 top-1.5 rounded-xl p-2 bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              aria-label="검색"
+              key={category.name}
+              className="flex items-center gap-1 hover:text-rose-600 transition-colors"
             >
-              <Search className="w-5 h-5" />
+              {category.icon}
+              {category.name}
+              <ChevronDown className="w-3 h-3" />
             </button>
-          </form>
-
-          <IconBtn label="알림">
-            <Bell className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="찜목록">
-            <Heart className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="장바구니">
-            <ShoppingCart className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="마이" onClick={() => navigateTo ? navigateTo('/mypage') : window.location.href = '/mypage'}>
-            <User className="w-5 h-5" />
-          </IconBtn>
-        </div>
-        <nav className="relative -mx-4 border-t bg-white">
-          <div className="mx-auto max-w-screen-2xl px-4">
-            <div className="flex items-center gap-3 overflow-x-auto py-2 no-scrollbar">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.name}
-                  className="flex items-center gap-2 rounded-xl border bg-white px-3 py-1.5 text-sm text-gray-700 hover:text-rose-600 hover:shadow-sm"
-                >
-                  {c.icon}
-                  <span className="whitespace-nowrap">{c.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          ))}
         </nav>
       </div>
     </header>
   );
 }
 
-function HeroCarousel(): JSX.Element {
+function HeroCarousel() {
   const [index, setIndex] = useState<number>(0);
   const timerRef = useRef<number | null>(null);
 
@@ -319,7 +372,7 @@ function HeroCarousel(): JSX.Element {
 }
 
 type SectionHeaderProps = { title: string; subtitle?: string; right?: React.ReactNode };
-function SectionHeader({ title, subtitle, right }: SectionHeaderProps): JSX.Element {
+function SectionHeader({ title, subtitle, right }: SectionHeaderProps) {
   return (
     <div className="flex items-end justify-between">
       <div>
@@ -331,11 +384,28 @@ function SectionHeader({ title, subtitle, right }: SectionHeaderProps): JSX.Elem
   );
 }
 
-function ProductCard({ p }: { p: Product }): JSX.Element {
+function ProductCard({ p, navigateTo }: { p: Product; navigateTo: (path: string) => void }) {
   const discounted = Math.round(p.price * (1 - p.sale / 100));
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    cartService.addToCart(p, 1);
+    
+    // 장바구니 업데이트 이벤트 발생
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    
+    alert('장바구니에 추가되었습니다!');
+  };
+
   return (
     <motion.a
-      href="#"
+      href={`/product/${p.id}`} // 상품 상세 페이지 링크 추가
+      onClick={(e) => {
+        e.preventDefault();
+        navigateTo(`/product/${p.id}`);
+      }}
       className="group relative block overflow-hidden rounded-2xl border bg-white shadow-sm"
       initial={{ y: 8, opacity: 0 }}
       whileInView={{ y: 0, opacity: 1 }}
@@ -349,6 +419,15 @@ function ProductCard({ p }: { p: Product }): JSX.Element {
             {p.sale}%
           </div>
         ) : null}
+        
+        {/* 장바구니 담기 버튼 */}
+        <button
+          onClick={handleAddToCart}
+          className="absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-md hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+          title="장바구니에 담기"
+        >
+          <ShoppingCart className="w-4 h-4 text-gray-700" />
+        </button>
       </div>
       <div className="space-y-1.5 p-3">
         <div className="flex items-center gap-1 text-[11px] text-rose-600 font-semibold">
@@ -367,13 +446,21 @@ function ProductCard({ p }: { p: Product }): JSX.Element {
           ))}
         </div>
         <div className="text-xs text-amber-600">★ {p.rating}</div>
+        
+        {/* 하단 장바구니 버튼 */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full mt-2 bg-rose-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-rose-600 transition-colors"
+        >
+          장바구니 담기
+        </button>
       </div>
-    </motion.a>
+    </motion.div>
   );
 }
 
 type SortKey = "best" | "new" | "low" | "high";
-function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }): JSX.Element {
+function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }) {
   const tabs: { id: SortKey; label: string }[] = [
     { id: "best", label: "인기순" },
     { id: "new", label: "신상품" },
@@ -395,7 +482,7 @@ function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => v
   );
 }
 
-function DealsGrid({ query }: { query: string }): JSX.Element {
+function DealsGrid({ query, navigateTo }: { query: string; navigateTo: (path: string) => void }) {
   const [sort, setSort] = useState<SortKey>("best");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -449,6 +536,32 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
     return arr;
   }, [sort, products]);
 
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-screen-2xl px-4">
+        <div className="mb-4">
+          <SectionHeader
+            title="오늘의 딜"
+            subtitle="실시간 베스트를 모아봤어요"
+            right={<SortTabs sort={sort} setSort={setSort} />}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-square bg-gray-200 rounded-2xl mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-screen-2xl px-4">
       <div className="mb-4">
@@ -483,7 +596,7 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
   );
 }
 
-function PromoTiles(): JSX.Element {
+function PromoTiles() {
   const tiles = [
     { id: 1, title: "슈퍼세일", desc: "카테고리 쿠폰 매일 지급", img: "https://picsum.photos/seed/sale/600/400" },
     { id: 2, title: "여행 특가", desc: "티켓/여행 최대 30%", img: "https://picsum.photos/seed/travel/600/400" },
@@ -521,7 +634,7 @@ function PromoTiles(): JSX.Element {
   );
 }
 
-function Footer(): JSX.Element {
+function Footer() {
   return (
     <footer className="mt-16 border-t bg-gray-50">
       <div className="mx-auto max-w-screen-2xl px-4 py-10 grid gap-6 md:grid-cols-4">
@@ -561,11 +674,12 @@ function Footer(): JSX.Element {
 }
 
 type ElevenStreetHomeProps = {
-  navigateTo?: (path: string) => void;
+  navigateTo: (path: string) => void; // navigateTo를 필수로 변경
 };
 
-export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps): React.JSX.Element {
+export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps) {
   const [query, setQuery] = useState<string>("");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-900">
       <TopNotice />
@@ -573,7 +687,7 @@ export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps):
       <main className="space-y-10 md:space-y-14">
         <HeroCarousel />
         <PromoTiles />
-        <DealsGrid query={query} />
+        <DealsGrid query={query} navigateTo={navigateTo} />
       </main>
       <Footer />
     </div>

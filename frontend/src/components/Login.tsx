@@ -48,6 +48,22 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
       const success = await login(form.id, form.pw, userType);
       
       if (success) {
+      const response = await fetch('http://localhost:3001/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.id,
+          password: form.pw,
+          userType: userType, // 사용자 타입 전송
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // 로그인 성공 시 AuthContext 업데이트 (사용자 정보 포함)
+        login(userType, data.user);
         alert('로그인 성공!');
         
         // 판매자인 경우 판매자 마이페이지로, 일반 사용자는 홈으로

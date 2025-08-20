@@ -69,9 +69,13 @@ export interface DashboardData {
 }
 
 // 마이페이지 대시보드 전체 정보 조회
-export const getDashboardData = async (): Promise<DashboardData> => {
+export const getDashboardData = async (userId?: number): Promise<DashboardData> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/mypage/dashboard`);
+    const url = userId 
+      ? `${API_BASE_URL}/mypage/dashboard?userId=${userId}`
+      : `${API_BASE_URL}/mypage/dashboard`;
+    
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error('Failed to fetch dashboard data');
     }

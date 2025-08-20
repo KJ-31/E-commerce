@@ -1,77 +1,91 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-interface User {
-  id: number;
+type UserType = 'user' | 'seller' | null;
+
+interface UserInfo {
+  user_id: number;
   email: string;
-  name: string;
-  role: 'seller' | 'user';
+  user_name: string;
+  user_addr?: string;
+  user_phone_num?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: (email: string, password: string, role?: 'seller' | 'user') => Promise<boolean>;
+  isLoggedIn: boolean;
+  userType: UserType;
+  userInfo: UserInfo | null;
+  login: (email: string, password: string, type?: UserType) => Promise<boolean>;
   logout: () => void;
-  loading: boolean;
+  restoreSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userType, setUserType] = useState<UserType>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+  // 세션 복구
+  const restoreSession = () => {
+    try {
+      const savedUserInfo = sessionStorage.getItem('userInfo');
+      const savedUserType = sessionStorage.getItem('userType');
+      if (savedUserInfo && savedUserType) {
+        setIsLoggedIn(true);
+        setUserInfo(JSON.parse(savedUserInfo));
+        setUserType(savedUserType as UserType);
+      }
+    } catch (error) {
+      console.error('세션 복구 실패:', error);
+    }
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error parsing user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
+    restoreSession();
   }, []);
 
-  const login = async (email: string, password: string, role: 'seller' | 'user' = 'user') => {
+  // API 기반 로그인
+  const login = async (email: string, password: string, type: UserType = 'user') => {
     try {
       const response = await fetch(`http://localhost:3001/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, userType: role }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, userType: type }),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        const data = result.data; // Extract data from success response
-        const userData = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name || data.user.user_name,
-          role: role,
-        };
+      if (!response.ok) return false;
 
-        // Note: Backend doesn't return access_token in current implementation
-        // For now, we'll just store user data without token
-        localStorage.setItem('user', JSON.stringify(userData));
-        setUser(userData);
-        return true;
-      }
-      return false;
+      const result = await response.json();
+      const data = result.data.user;
+
+      const userInfo: UserInfo = {
+        user_id: data.id || data.user_id,
+        email: data.email,
+        user_name: data.name || data.user_name,
+        user_addr: data.user_addr,
+        user_phone_num: data.user_phone_num,
+      };
+
+      setIsLoggedIn(true);
+      setUserType(type);
+      setUserInfo(userInfo);
+
+      // 세션 저장
+      sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
+      sessionStorage.setItem('userType', type);
+
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       return false;
@@ -79,18 +93,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+    setIsLoggedIn(false);
+    setUserType(null);
+    setUserInfo(null);
+    sessionStorage.removeItem('userInfo');
+    sessionStorage.removeItem('userType');
   };
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    login,
-    logout,
-    loading,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ isLoggedIn, userType, userInfo, login, logout, restoreSession }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

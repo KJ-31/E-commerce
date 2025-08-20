@@ -12,6 +12,5 @@ import { Seller } from '../entities/seller.entity';
   ],
   controllers: [AuthController],
   providers: [AuthService],
-  exports: [AuthService],
 })
 export class AuthModule {}

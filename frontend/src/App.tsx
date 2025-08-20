@@ -1,21 +1,26 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import ElevenStreetHome from './11st-Home';
 import MyPage from './components/MyPage';
 import SignUp from './components/SignUp';
 import SellerSignUp from './components/SellerSignUp';
 import Login from './components/Login';
+import Cart from './components/Cart';
+import OrderComplete from './components/OrderComplete';
+import TossPayment from './components/TossPayment';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFail from './components/PaymentFail';
 import SellerMyPage from './seller_mypage/SellerMyPage';
+import ProductDetail from './components/ProductDetail';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  const { isAuthenticated, user } = useAuth();
-  
+  const { isLoggedIn, userType } = useAuth();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
+    const handlePopState = () => setCurrentPath(window.location.pathname);
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
@@ -25,14 +30,10 @@ function AppContent() {
     setCurrentPath(path);
   };
 
-  // 보호된 경로 체크
-  const isProtectedRoute = (path: string) => {
-    return path === '/mypage' || path === '/seller-mypage';
-  };
+  const isProtectedRoute = (path: string) => ['/mypage', '/seller/mypage'].includes(path);
 
-  // 로그인 필요 경로 접근 시 처리
   const handleProtectedRouteAccess = (path: string) => {
-    if (!isAuthenticated) {
+    if (!isLoggedIn) {
       alert('로그인 후 이용 가능합니다.');
       navigateTo('/login');
       return false;
@@ -40,32 +41,40 @@ function AppContent() {
     return true;
   };
 
-  // 사용자 타입에 따른 마이페이지 리다이렉트
   const handleMyPageAccess = () => {
-    if (!isAuthenticated) {
+    if (!isLoggedIn) {
       alert('로그인 후 이용 가능합니다.');
       navigateTo('/login');
       return false;
     }
-    
-    if (user?.role === 'seller') {
-      navigateTo('/seller-mypage');
+    if (userType === 'seller') {
+      navigateTo('/seller/mypage');
       return false;
     }
-    
     return true;
   };
 
   const renderCurrentPage = () => {
-    switch (currentPath) {
+    const pathWithoutQuery = currentPath.split('?')[0];
+    switch (pathWithoutQuery) {
       case '/':
         return <ElevenStreetHome navigateTo={navigateTo} />;
       case '/mypage':
         if (!handleMyPageAccess()) return null;
         return <MyPage navigateTo={navigateTo} />;
-      case '/seller-mypage':
+      case '/cart':
+        return <Cart navigateTo={navigateTo} />;
+      case '/order-complete':
+        return <OrderComplete navigateTo={navigateTo} />;
+      case '/toss-payment':
+        return <TossPayment navigateTo={navigateTo} />;
+      case '/payment-success':
+        return <PaymentSuccess navigateTo={navigateTo} />;
+      case '/payment-fail':
+        return <PaymentFail navigateTo={navigateTo} />;
+      case '/seller/mypage':
         if (!handleProtectedRouteAccess(currentPath)) return null;
-        if (user?.role !== 'seller') {
+        if (userType !== 'seller') {
           alert('셀러 계정으로 로그인 후 이용 가능합니다.');
           navigateTo('/');
           return null;
@@ -88,7 +97,15 @@ function AppContent() {
 
   return (
     <div className="App">
-      {renderCurrentPage()}
+      <Routes>
+        <Route path="/" element={<ElevenStreetHome navigateTo={navigateTo} />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/mypage" element={isLoggedIn ? <MyPage navigateTo={navigateTo} /> : <Login navigateTo={navigateTo} />} />
+        <Route path="/seller/mypage" element={isLoggedIn && userType === 'seller' ? <SellerMyPage /> : <Login navigateTo={navigateTo} />} />
+        <Route path="/signup" element={<SignUp navigateTo={navigateTo} />} />
+        <Route path="/login" element={<Login navigateTo={navigateTo} />} />
+        <Route path="*" element={<ElevenStreetHome navigateTo={navigateTo} />} />
+      </Routes>
     </div>
   );
 }
@@ -96,7 +113,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </AuthProvider>
   );
 }

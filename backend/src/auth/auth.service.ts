@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
@@ -6,6 +6,33 @@ import { Admin } from '../entities/admin.entity';
 import { Seller } from '../entities/seller.entity';
 import { SignUpDto, SellerSignUpDto, LoginDto } from './auth.controller';
 import * as bcrypt from 'bcrypt';
+
+
+export class SignUpDto {
+  email: string;
+  password: string;
+  name: string;
+  phone?: string;
+  address?: string;
+}
+
+export class SellerSignUpDto {
+  email: string;
+  password: string;
+  name: string;
+  phone?: string;
+  address?: string;
+  companyName?: string;
+  businessNumber?: string;
+  companyPhone?: string;
+  companyAddress?: string;
+}
+
+export class LoginDto {
+  email: string;
+  password: string;
+  userType: 'user' | 'seller';
+}
 
 @Injectable()
 export class AuthService {
@@ -19,37 +46,31 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
-    // 이메일 중복 확인
-    const existingUser = await this.userRepository.findOne({
-      where: { email: signUpDto.email }
-    });
+    const { email, password, name, phone, address } = signUpDto;
 
+    // 이메일 중복 확인
+    const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
-      throw new Error('이미 존재하는 이메일입니다.');
+      throw new ConflictException('이미 존재하는 이메일입니다.');
     }
 
     // 비밀번호 해시화
-    const hashedPassword = await bcrypt.hash(signUpDto.password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 새 사용자 생성
-    const newUser = this.userRepository.create({
-      email: signUpDto.email,
+    // 사용자 생성
+    const user = this.userRepository.create({
+      email,
       user_pw: hashedPassword,
-      user_name: signUpDto.name,
-      user_phone_num: signUpDto.phone,
-      user_addr: signUpDto.address,
+      user_name: name,
+      user_phone_num: phone,
+      user_addr: address,
     });
 
-    const savedUser = await this.userRepository.save(newUser);
-
-    // 비밀번호는 제외하고 반환
-    const { user_pw, ...userWithoutPassword } = savedUser;
-    return userWithoutPassword;
+    await this.userRepository.save(user);
+    return { message: '회원가입이 완료되었습니다.' };
   }
 
   async sellerSignUp(sellerSignUpDto: SellerSignUpDto) {
-    console.log('Received seller signup data:', sellerSignUpDto);
-    
     const { 
       email, 
       password, 
@@ -99,9 +120,6 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const { email, password, userType } = loginDto;
-    console.log('=== Login attempt ===');
-    console.log('Email:', email);
-    console.log('UserType:', userType);
     
     if (userType === 'seller') {
       // 판매자 로그인
@@ -151,8 +169,18 @@ export class AuthService {
           };
         }
       }
-    }
 
-    throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
+      return {
+        message: '로그인 성공',
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          user_name: user.user_name,
+          user_phone_num: user.user_phone_num,
+          user_addr: user.user_addr,
+          type: 'user'
+        }
+      };
+    }
   }
 }

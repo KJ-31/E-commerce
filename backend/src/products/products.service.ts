@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import { Category } from '../entities/category.entity';
+import { ProductResponseDto } from './dto/product-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -13,16 +14,13 @@ export class ProductsService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  async getProducts(sort?: string, search?: string, limit?: number) {
-    console.log('Getting products with params:', { sort, search, limit });
-    
+  async getProducts(sort?: string, search?: string, limit?: number): Promise<ProductResponseDto[]> {
     let query = this.productRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category');
 
     // 검색 필터 적용
     if (search) {
-      console.log('Applying search filter for:', search);
       query = query.where(
         'product.product_name ILIKE :search OR product.description ILIKE :search OR product.company ILIKE :search',
         { search: `%${search}%` }
@@ -51,10 +49,9 @@ export class ProductsService {
     }
 
     const products = await query.getMany();
-    console.log('Found products:', products.length);
-
+    
     // 프론트엔드에서 사용할 수 있는 형태로 변환
-    const result = products.map(product => ({
+    return products.map(product => ({
       id: product.product_id,
       brand: product.company,
       name: product.product_name,
@@ -76,13 +73,39 @@ export class ProductsService {
     return await this.getProducts('best', undefined, 12);
   }
 
-  async getAllProducts() {
-    // 모든 상품 조회
-    return await this.getProducts();
+// 모든 상품 조회
+async getAllProducts() {
+  return await this.getProducts();
+}
+
+// 검색어를 사용한 상품 검색
+async searchProducts(searchQuery: string) {
+  return await this.getProducts(undefined, searchQuery);
+}
+
+// ID 기반 상품 조회
+async getProductById(id: number): Promise<ProductResponseDto | undefined> {
+  const product = await this.productRepository
+    .createQueryBuilder('product')
+    .leftJoinAndSelect('product.category', 'category')
+    .where('product.product_id = :id', { id })
+    .getOne();
+
+  if (!product) {
+    return undefined;
   }
 
-  async searchProducts(searchQuery: string) {
-    // 검색어를 사용한 상품 검색
-    return await this.getProducts(undefined, searchQuery);
+  return {
+      id: product.product_id,
+      brand: product.company,
+      name: product.product_name,
+      price: parseFloat(product.product_price.toString()),
+      sale: 0, // 할인율은 별도 계산 필요
+      rating: '4.0', // 평점은 별도 테이블 필요
+      img: product.main_img || 'https://picsum.photos/seed/default/600/600',
+      tags: product.quantity > 0 ? ['재고있음'] : ['품절'],
+      description: product.description,
+      category: product.category?.category_name
+    };
   }
 }

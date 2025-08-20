@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
 import { SellersModule } from './sellers/sellers.module';
 import { OrdersModule } from './orders/orders.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { OrdersModule } from './orders/orders.module';
       password: process.env.POSTGRES_PASSWORD || 'password',
       database: process.env.POSTGRES_DB || 'db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: false, // 기존 데이터베이스 구조 유지
+      synchronize: false, // 개발 중에만 true로 설정
       logging: process.env.NODE_ENV === 'development',
     }),
     MyPageModule,
@@ -26,6 +27,7 @@ import { OrdersModule } from './orders/orders.module';
     ProductsModule,
     SellersModule,
     OrdersModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
