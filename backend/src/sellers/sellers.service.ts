@@ -107,17 +107,25 @@ export class SellersService {
       order: { created_at: 'DESC' }
     });
 
-    return products.map(product => ({
-      id: product.product_id,
-      name: product.product_name,
-      price: Number(product.product_price),
-      stock: product.quantity,
-      views: Math.floor(Math.random() * 2000) + 100, // 임시 조회수
-      orders: Math.floor(Math.random() * 50) + 1, // 임시 주문수
-      image: product.productImages?.[0]?.image_url || product.main_img || 'https://picsum.photos/seed/product/200/200',
-      category: product.category?.category_name,
-      description: product.description
-    }));
+    return products.map(product => {
+      // 이미지 URL 처리 로직 (products.service.ts와 동일하게)
+      const mainImg = product.productImages?.[0]?.image_url || product.main_img;
+      const processedImage = mainImg?.startsWith('/uploads/') 
+        ? `http://localhost:3001${mainImg}` 
+        : (mainImg || 'https://picsum.photos/seed/product/200/200');
+
+      return {
+        id: product.product_id,
+        name: product.product_name,
+        price: Number(product.product_price),
+        stock: product.quantity,
+        views: Math.floor(Math.random() * 2000) + 100, // 임시 조회수
+        orders: Math.floor(Math.random() * 50) + 1, // 임시 주문수
+        image: processedImage,
+        category: product.category?.category_name,
+        description: product.description
+      };
+    });
   }
 
   async getSellerOrders(sellerId: number) {
