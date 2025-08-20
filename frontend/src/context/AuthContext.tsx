@@ -1,11 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-type UserType = 'user' | 'seller' | null;
+type UserType = 'general' | 'seller' | null;
 
 interface AuthContextType {
   isLoggedIn: boolean;
   userType: UserType;
-  login: (type: UserType) => void;
+  token: string | null;
+  login: (type: UserType, token: string) => void;
   logout: () => void;
 }
 
@@ -26,19 +27,36 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState<UserType>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  const login = (type: UserType) => {
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedUserType = localStorage.getItem('userType') as UserType;
+    if (storedToken && storedUserType) {
+      setIsLoggedIn(true);
+      setToken(storedToken);
+      setUserType(storedUserType);
+    }
+  }, []);
+
+  const login = (type: UserType, token: string) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userType', type || '');
     setIsLoggedIn(true);
+    setToken(token);
     setUserType(type);
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userType');
     setIsLoggedIn(false);
+    setToken(null);
     setUserType(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userType, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, userType, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

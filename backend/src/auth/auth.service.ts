@@ -4,32 +4,11 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../entities/user.entity';
 import { Seller } from '../entities/seller.entity';
+import { JwtService } from '@nestjs/jwt'; // New import
 
-export class SignUpDto {
-  email: string;
-  password: string;
-  name: string;
-  phone?: string;
-  address?: string;
-}
-
-export class SellerSignUpDto {
-  email: string;
-  password: string;
-  name: string;
-  phone?: string;
-  address?: string;
-  companyName?: string;
-  businessNumber?: string;
-  companyPhone?: string;
-  companyAddress?: string;
-}
-
-export class LoginDto {
-  email: string;
-  password: string;
-  userType: 'user' | 'seller';
-}
+import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from './dto/signup.dto';
+import { SellerSignUpDto } from './dto/seller-signup.dto';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +17,7 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(Seller)
     private sellerRepository: Repository<Seller>,
+    private jwtService: JwtService, // New injection
   ) {}
 
   async signUp(signUpDto: SignUpDto) {
@@ -107,30 +87,22 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password, userType } = loginDto;
 
+    let user: User | Seller | null = null;
+    let payload: { sub: number; email: string; type: string; name: string };
+
     if (userType === 'seller') {
-      // 셀러 로그인
-      const seller = await this.sellerRepository.findOne({ where: { email } });
-      if (!seller) {
+      user = await this.sellerRepository.findOne({ where: { email } });
+      if (!user) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
 
-      const isPasswordValid = await bcrypt.compare(password, seller.seller_pw);
+      const isPasswordValid = await bcrypt.compare(password, user.seller_pw);
       if (!isPasswordValid) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
-
-      return {
-        message: '로그인 성공',
-        user: {
-          id: seller.seller_id,
-          email: seller.email,
-          name: seller.seller_name,
-          type: 'seller'
-        }
-      };
+      payload = { sub: user.seller_id, email: user.email, type: 'seller', name: user.seller_name };
     } else {
-      // 일반 사용자 로그인
-      const user = await this.userRepository.findOne({ where: { email } });
+      user = await this.userRepository.findOne({ where: { email } });
       if (!user) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
@@ -139,16 +111,10 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('이메일 또는 비밀번호가 올바르지 않습니다.');
       }
-
-      return {
-        message: '로그인 성공',
-        user: {
-          id: user.user_id,
-          email: user.email,
-          name: user.user_name,
-          type: 'user'
-        }
-      };
+      payload = { sub: user.user_id, email: user.email, type: 'user', name: user.user_name };
     }
+
+    const accessToken = this.jwtService.sign(payload);
+    return { accessToken };
   }
 }
