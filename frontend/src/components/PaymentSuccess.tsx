@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { tossPaymentService } from '../services/tossPaymentService';
 import { orderService } from '../services/orderService';
+import { cartService } from '../services/cartService';
 
 interface PaymentSuccessProps {
   navigateTo: (path: string) => void;
@@ -90,7 +91,8 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ navigateTo }) => {
             const orderData = {
               userId: currentUserInfo.user_id,
               items: paymentData.items.map((item: any) => ({
-                productId: item.productId,
+                // 장바구니에서는 productId를, 상품 상세에서는 id를 사용
+                productId: item.productId || item.id,
                 quantity: item.quantity,
                 price: item.price,
               })),
@@ -100,6 +102,22 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ navigateTo }) => {
             console.log('주문 생성 시작:', orderData);
             const orderResult = await orderService.createOrder(orderData);
             console.log('주문 생성 완료:', orderResult);
+            
+            // 장바구니에서 결제된 상품들 제거
+            if (paymentData.items && paymentData.items.length > 0) {
+              const userId = currentUserInfo?.user_id;
+              paymentData.items.forEach((item: any) => {
+                // 장바구니에서는 productId를, 상품 상세에서는 id를 사용
+                const productIdToRemove = item.productId || item.id;
+                if (productIdToRemove) {
+                  cartService.removeFromCart(productIdToRemove, userId);
+                }
+              });
+              
+              // 장바구니 업데이트 이벤트 발생
+              window.dispatchEvent(new CustomEvent('cartUpdated'));
+              console.log('장바구니에서 결제된 상품들 제거 완료');
+            }
           }
           
           // 세션 데이터 정리

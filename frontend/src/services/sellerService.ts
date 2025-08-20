@@ -141,11 +141,25 @@ class SellerService {
     return response.json();
   }
 
-  async addProduct(sellerId: number, productData: Omit<Product, 'product_id' | 'seller_id' | 'created_at' | 'updated_at'>): Promise<Product> {
+  async addProduct(sellerId: number, productData: any, images?: File[]): Promise<Product> {
+    const formData = new FormData();
+    
+    // 상품 데이터를 JSON으로 추가
+    formData.append('productData', JSON.stringify(productData));
+    
+    // 이미지 파일들 추가
+    if (images && images.length > 0) {
+      images.forEach((image, index) => {
+        formData.append(`images`, image);
+      });
+    }
+
     const response = await fetch(`${API_BASE_URL}/sellers/${sellerId}/products`, {
       method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(productData),
+      headers: {
+        ...(localStorage.getItem('token') && { Authorization: `Bearer ${localStorage.getItem('token')}` }),
+      },
+      body: formData,
     });
 
     if (!response.ok) {

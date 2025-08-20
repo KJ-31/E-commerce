@@ -14,6 +14,9 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   // 정적 파일 서빙 설정
   app.useStaticAssets(join(__dirname, '..', 'public'));
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
   // CORS 설정 추가
   app.enableCors({
     origin: ['http://localhost:5173', 'http://localhost:3000'],

@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Heart, Share2, Star, Truck, ShieldCheck } from 'lucide-react';
 import { productService, Product } from '../services/productService';
+import { cartService } from '../services/cartService';
+import { useAuth } from '../context/AuthContext';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { isLoggedIn, userInfo } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -84,6 +88,46 @@ const ProductDetail: React.FC = () => {
     });
   };
 
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    const userId = userInfo?.user_id;
+    cartService.addToCart(product, quantity, userId);
+    
+    // 장바구니 업데이트 이벤트 발생
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+    
+    alert('장바구니에 추가되었습니다.');
+  };
+
+  const handleBuyNow = () => {
+    if (!isLoggedIn) {
+      alert('로그인 후 이용 가능합니다.');
+      navigate('/login');
+      return;
+    }
+
+    if (!product) return;
+
+    // 결제할 상품 정보를 세션에 저장
+    const paymentData = {
+      items: [{
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        img: product.img,
+        quantity: quantity
+      }],
+      totalAmount: product.price * quantity,
+      userInfo: userInfo // AuthContext에서 사용자 정보 전달
+    };
+
+    sessionStorage.setItem('pendingPayment', JSON.stringify(paymentData));
+    
+    // 토스페이먼츠 결제 페이지로 이동
+    navigate('/toss-payment');
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
@@ -100,7 +144,12 @@ const ProductDetail: React.FC = () => {
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b">
         <div className="flex items-center space-x-4">
-          <div className="text-2xl font-bold text-red-500">11ST</div>
+          <div 
+            className="text-2xl font-bold text-red-500 cursor-pointer hover:text-red-600 transition-colors"
+            onClick={() => navigate('/')}
+          >
+            11ST
+          </div>
             <div className="text-sm text-gray-600">
               홈 &gt; {product.category || '카테고리'} &gt; {product.name}
             </div>
@@ -225,11 +274,17 @@ const ProductDetail: React.FC = () => {
               {/* 구매 버튼들 */}
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="border border-red-500 text-red-500 py-3 rounded font-medium hover:bg-red-50 transition-colors">
+                  <button 
+                    onClick={handleAddToCart}
+                    className="border border-red-500 text-red-500 py-3 rounded font-medium hover:bg-red-50 transition-colors"
+                  >
                     장바구니
                   </button>
-                  <button className="bg-red-500 text-white py-3 rounded font-medium hover:bg-red-600 transition-colors">
-                    구매하기
+                  <button 
+                    onClick={handleBuyNow}
+                    className="bg-blue-500 text-white py-3 rounded font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    토스페이먼츠로 결제하기
                   </button>
                 </div>
                 <button className="w-full bg-red-600 text-white py-3 rounded font-medium hover:bg-red-700 transition-colors flex items-center justify-center space-x-2">
@@ -388,11 +443,17 @@ const ProductDetail: React.FC = () => {
           >
             <Heart size={20} className={isLiked ? 'fill-current' : ''} />
           </button>
-          <button className="flex-1 border border-red-500 text-red-500 py-3 rounded font-medium">
+          <button 
+            onClick={handleAddToCart}
+            className="flex-1 border border-red-500 text-red-500 py-3 rounded font-medium"
+          >
             장바구니
           </button>
-          <button className="flex-1 bg-red-500 text-white py-3 rounded font-medium">
-            구매하기
+          <button 
+            onClick={handleBuyNow}
+            className="flex-1 bg-red-500 text-white py-3 rounded font-medium"
+          >
+            토스페이먼츠로 결제하기
           </button>
         </div>
       </div>

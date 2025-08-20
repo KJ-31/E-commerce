@@ -58,7 +58,9 @@ export class ProductsService {
       price: parseFloat(product.product_price.toString()),
       sale: 0, // 할인율은 별도 계산 필요
       rating: '4.0', // 평점은 별도 테이블 필요
-      img: product.main_img || 'https://picsum.photos/seed/default/600/600',
+      img: product.main_img?.startsWith('/uploads/') 
+        ? `http://localhost:3001${product.main_img}` 
+        : (product.main_img || 'https://picsum.photos/seed/default/600/600'),
       tags: product.quantity > 0 ? ['재고있음'] : ['품절'],
       description: product.description,
       category: product.category?.category_name
@@ -102,7 +104,9 @@ async getProductById(id: number): Promise<ProductResponseDto | undefined> {
       price: parseFloat(product.product_price.toString()),
       sale: 0, // 할인율은 별도 계산 필요
       rating: '4.0', // 평점은 별도 테이블 필요
-      img: product.main_img || 'https://picsum.photos/seed/default/600/600',
+      img: product.main_img?.startsWith('/uploads/') 
+        ? `http://localhost:3001${product.main_img}` 
+        : (product.main_img || 'https://picsum.photos/seed/default/600/600'),
       tags: product.quantity > 0 ? ['재고있음'] : ['품절'],
       description: product.description,
       category: product.category?.category_name

@@ -1070,7 +1070,12 @@ function SellerMyPage() {
 
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-6">
-              <h1 className="text-2xl font-black text-rose-600">11ST</h1>
+              <h1 
+                className="text-2xl font-black text-rose-600 cursor-pointer hover:text-rose-700 transition-colors"
+                onClick={() => window.location.href = '/'}
+              >
+                11ST
+              </h1>
               <div className="h-6 w-px bg-gray-300"></div>
               <h2 className="text-xl font-bold text-gray-900">판매자센터</h2>
             </div>

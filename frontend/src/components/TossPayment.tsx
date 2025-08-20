@@ -74,12 +74,12 @@ const TossPayment: React.FC<TossPaymentProps> = ({ navigateTo }) => {
       
       // 주문명 생성
       const orderName = paymentData.items.length === 1 
-        ? paymentData.items[0].productName 
-        : `${paymentData.items[0].productName} 외 ${paymentData.items.length - 1}개`;
+        ? (paymentData.items[0].name || paymentData.items[0].productName) 
+        : `${paymentData.items[0].name || paymentData.items[0].productName} 외 ${paymentData.items.length - 1}개`;
 
       // 결제 요청
       await tossPaymentService.requestPayment({
-        amount: paymentData.totalPrice,
+        amount: paymentData.totalPrice || paymentData.totalAmount,
         orderId: orderId,
         orderName: orderName,
         customerName: paymentData.userInfo?.user_name || '고객',
@@ -169,11 +169,11 @@ const TossPayment: React.FC<TossPaymentProps> = ({ navigateTo }) => {
                 {paymentData.items.map((item: any, index: number) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b">
                     <div>
-                      <h3 className="font-medium text-gray-900">{item.productName}</h3>
+                      <h3 className="font-medium text-gray-900">{item.name || item.productName}</h3>
                       <p className="text-sm text-gray-600">수량: {item.quantity}개</p>
                     </div>
                     <p className="font-semibold text-gray-900">
-                      {(item.price * item.quantity).toLocaleString()}원
+                      {((item.price || 0) * (item.quantity || 0)).toLocaleString()}원
                     </p>
                   </div>
                 ))}
@@ -181,7 +181,7 @@ const TossPayment: React.FC<TossPaymentProps> = ({ navigateTo }) => {
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center text-lg font-semibold">
                     <span>총 결제금액</span>
-                    <span className="text-red-600">{paymentData.totalPrice.toLocaleString()}원</span>
+                    <span className="text-red-600">{(paymentData.totalPrice || paymentData.totalAmount || 0).toLocaleString()}원</span>
                   </div>
                 </div>
               </div>

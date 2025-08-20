@@ -52,27 +52,35 @@ export class MyPageService {
 
     orders.forEach(order => {
       switch (order.order_status) {
+        case '주문접수':
         case 'pending':
           stats.pending++;
           break;
+        case '결제완료':
         case 'paid':
           stats.paid++;
           break;
+        case '배송준비중':
         case 'preparing':
           stats.preparing++;
           break;
+        case '배송중':
         case 'shipping':
           stats.shipping++;
           break;
+        case '배송완료':
         case 'completed':
           stats.completed++;
           break;
+        case '취소':
         case 'cancelled':
           stats.cancelled++;
           break;
+        case '교환':
         case 'exchanged':
           stats.exchanged++;
           break;
+        case '반품':
         case 'returned':
           stats.returned++;
           break;
