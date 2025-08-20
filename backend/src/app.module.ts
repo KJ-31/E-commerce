@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { MyPageModule } from './mypage/mypage.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -13,9 +16,12 @@ import { AppService } from './app.service';
       password: process.env.POSTGRES_PASSWORD || 'password',
       database: process.env.POSTGRES_DB || 'db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV === 'development', // 개발 환경에서만 true
+      synchronize: false, // 개발 중에만 true로 설정
       logging: process.env.NODE_ENV === 'development',
     }),
+    MyPageModule,
+    AuthModule,
+    ProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

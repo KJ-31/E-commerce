@@ -1,19 +1,25 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Search,
-  ShoppingCart,
-  Bell,
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { 
+  Search, 
+  ShoppingCart, 
+  Heart, 
+  User, 
+  Menu, 
+  ChevronDown, 
+  Star, 
+  Truck, 
+  Shield, 
+  RotateCcw,
+  ArrowRight,
+  Phone,
+  Mail,
+  MapPin,
   ChevronLeft,
-  ChevronRight,
-  Menu,
-  Heart,
-  User,
-  Truck,
-  Gift,
-  Headphones,
-  Tag,
+  ChevronRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from './context/AuthContext';
+import { productService, Product } from './services/productService';
 
 /**
  * 11번가 메인 페이지 느낌의 반응형 홈 스켈레톤 (TypeScript + TSX)
@@ -25,26 +31,16 @@ import { motion, AnimatePresence } from "framer-motion";
 
 type Category = { name: string; icon: React.ReactNode };
 type Slide = { id: number; title: string; subtitle: string; img: string; bg: string };
-type Product = {
-  id: number;
-  brand: string;
-  name: string;
-  price: number;
-  sale: number; // percent
-  rating: string;
-  img: string;
-  tags: string[];
-};
 
 const CATEGORIES: Category[] = [
-  { name: "패션", icon: <Tag className="w-5 h-5" aria-hidden /> },
-  { name: "뷰티", icon: <Gift className="w-5 h-5" aria-hidden /> },
-  { name: "디지털", icon: <Headphones className="w-5 h-5" aria-hidden /> },
+  { name: "패션", icon: <Shield className="w-5 h-5" aria-hidden /> },
+  { name: "뷰티", icon: <Star className="w-5 h-5" aria-hidden /> },
+  { name: "디지털", icon: <RotateCcw className="w-5 h-5" aria-hidden /> },
   { name: "가전", icon: <Truck className="w-5 h-5" aria-hidden /> },
-  { name: "식품", icon: <Gift className="w-5 h-5" aria-hidden /> },
-  { name: "리빙", icon: <Tag className="w-5 h-5" aria-hidden /> },
-  { name: "스포츠", icon: <Headphones className="w-5 h-5" aria-hidden /> },
-  { name: "도서", icon: <Gift className="w-5 h-5" aria-hidden /> },
+  { name: "식품", icon: <Star className="w-5 h-5" aria-hidden /> },
+  { name: "리빙", icon: <Shield className="w-5 h-5" aria-hidden /> },
+  { name: "스포츠", icon: <RotateCcw className="w-5 h-5" aria-hidden /> },
+  { name: "도서", icon: <Star className="w-5 h-5" aria-hidden /> },
   { name: "티켓/여행", icon: <Truck className="w-5 h-5" aria-hidden /> },
 ];
 
@@ -72,38 +68,20 @@ const SLIDES: Slide[] = [
   },
 ];
 
-const MOCK_PRODUCTS: Product[] = Array.from({ length: 12 }).map((_, i) => ({
-  id: i + 1,
-  brand: ["삼성", "LG", "Apple", "Nike", "Adidas", "무인양품"][i % 6]!,
-  name: [
-    "모던 무선 청소기",
-    "USB-C 이어폰",
-    "울트라런닝화",
-    "무선 블루투스 스피커",
-    "홈카페 글라스컵 세트",
-    "각도조절 스탠드 조명",
-  ][i % 6]!,
-  price: 10000 + i * 1350,
-  sale: [5, 10, 15, 20][i % 4]!,
-  rating: (Math.round((3.5 + (i % 15) / 10) * 10) / 10).toFixed(1),
-  img: `https://picsum.photos/seed/p${i + 12}/600/600`,
-  tags: i % 2 === 0 ? ["무료배송", "오늘출발"] : ["쿠폰", "베스트"],
-}));
-
 function currency(n: number): string {
   return n.toLocaleString("ko-KR");
 }
 
 type WithChildren = { children: React.ReactNode };
 
-const Pill: React.FC<WithChildren> = ({ children }) => (
+const Pill = ({ children }: WithChildren) => (
   <span className="inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium text-gray-700 bg-white/80 shadow-sm">
     {children}
   </span>
 );
 
 type IconBtnProps = { label: string; onClick?: () => void } & WithChildren;
-const IconBtn: React.FC<IconBtnProps> = ({ label, children, onClick }) => (
+const IconBtn = ({ label, children, onClick }: IconBtnProps) => (
   <button
     onClick={onClick}
     className="inline-flex items-center gap-2 rounded-2xl border bg-white/80 px-3 py-2 text-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-rose-400"
@@ -113,7 +91,7 @@ const IconBtn: React.FC<IconBtnProps> = ({ label, children, onClick }) => (
   </button>
 );
 
-function TopNotice(): JSX.Element {
+function TopNotice() {
   return (
     <div className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-sm">
       <div className="mx-auto max-w-screen-2xl px-4 py-2 flex items-center justify-between">
@@ -124,90 +102,145 @@ function TopNotice(): JSX.Element {
   );
 }
 
-type HeaderProps = { query: string; setQuery: React.Dispatch<React.SetStateAction<string>> };
-function Header({ query, setQuery }: HeaderProps): JSX.Element {
+type HeaderProps = { 
+  query: string; 
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
+  navigateTo?: (path: string) => void;
+};
+function Header({ query, setQuery, navigateTo }: HeaderProps) {
+  const { isLoggedIn, userType, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    alert('로그아웃되었습니다.');
+  };
+
+  const handleMyPageClick = () => {
+    if (!isLoggedIn) {
+      alert('로그인 후 이용 가능합니다.');
+      navigateTo('/login');
+      return;
+    }
+    
+    if (userType === 'seller') {
+      navigateTo('/seller/mypage');
+    } else {
+      navigateTo('/mypage');
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/90 border-b">
-      <div className="mx-auto max-w-screen-2xl px-4">
-        <div className="flex items-center gap-3 py-3">
-          <button className="md:hidden p-2 rounded-xl hover:bg-gray-100" aria-label="메뉴 열기">
-            <Menu className="w-6 h-6" />
-          </button>
-          <a href="#" className="font-black text-2xl tracking-tight text-rose-600 select-none">
-            11ST
-          </a>
-
-          <div className="flex-1" />
-
-          <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
-            <a className="hover:text-rose-600" href="#" >로그인</a>
-            <span className="text-gray-300">|</span>
-            <a className="hover:text-rose-600" href="#">회원가입</a>
-            <span className="text-gray-300">|</span>
-            <a className="hover:text-rose-600" href="#">고객센터</a>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 pb-4">
-          <form
-            className="relative flex-1"
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert(`검색어: ${query}`);
-            }}
-            role="search"
-            aria-label="사이트 검색"
-          >
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="브랜드, 상품, 카테고리 검색"
-              className="w-full rounded-2xl border px-5 py-3 pr-12 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-            />
-            <button
-              type="submit"
-              className="absolute right-1.5 top-1.5 rounded-xl p-2 bg-rose-500 text-white hover:bg-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400"
-              aria-label="검색"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-          </form>
-
-          <IconBtn label="알림">
-            <Bell className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="찜목록">
-            <Heart className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="장바구니">
-            <ShoppingCart className="w-5 h-5" />
-          </IconBtn>
-          <IconBtn label="마이">
-            <User className="w-5 h-5" />
-          </IconBtn>
-        </div>
-
-        <nav className="relative -mx-4 border-t bg-white">
-          <div className="mx-auto max-w-screen-2xl px-4">
-            <div className="flex items-center gap-3 overflow-x-auto py-2 no-scrollbar">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c.name}
-                  className="flex items-center gap-2 rounded-xl border bg-white px-3 py-1.5 text-sm text-gray-700 hover:text-rose-600 hover:shadow-sm"
-                >
-                  {c.icon}
-                  <span className="whitespace-nowrap">{c.name}</span>
-                </button>
-              ))}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between py-4">
+          {/* 로고 */}
+          <div className="flex items-center gap-8">
+            <h1 className="text-2xl font-black text-rose-600">11ST</h1>
+            
+            {/* 검색바 */}
+            <div className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="검색어를 입력하세요"
+                className="w-96 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+              />
             </div>
           </div>
+
+          {/* 우측 메뉴 */}
+          <div className="flex items-center gap-4">
+            {/* 모바일 검색 */}
+            <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* 데스크톱 메뉴 */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-gray-700">
+              {isLoggedIn ? (
+                <>
+                  <span className="font-medium">
+                    {userType === 'seller' ? '셀러' : '사용자'}님 환영합니다!
+                  </span>
+                  <button 
+                    onClick={handleMyPageClick}
+                    className="hover:text-rose-600"
+                  >
+                    마이페이지
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button 
+                    onClick={handleLogout}
+                    className="hover:text-rose-600"
+                  >
+                    로그아웃
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <a className="hover:text-rose-600" href="#">고객센터</a>
+                </>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => navigateTo?.('/login')}
+                    className="hover:text-rose-600"
+                  >
+                    로그인
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button 
+                    onClick={() => navigateTo?.('/signup')}
+                    className="hover:text-rose-600"
+                  >
+                    회원가입
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <a className="hover:text-rose-600" href="#">고객센터</a>
+                </>
+              )}
+            </div>
+
+            {/* 아이콘 메뉴 */}
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                <Heart className="w-5 h-5" />
+                {isLoggedIn && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                )}
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
+                <ShoppingCart className="w-5 h-5" />
+                {isLoggedIn && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center">2</span>
+                )}
+              </button>
+              <button className="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+                <Menu className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 카테고리 네비게이션 */}
+        <nav className="hidden md:flex items-center gap-6 py-3 text-sm border-t">
+          {CATEGORIES.map((category) => (
+            <button
+              key={category.name}
+              className="flex items-center gap-1 hover:text-rose-600 transition-colors"
+            >
+              {category.icon}
+              {category.name}
+              <ChevronDown className="w-3 h-3" />
+            </button>
+          ))}
         </nav>
       </div>
     </header>
   );
 }
 
-function HeroCarousel(): JSX.Element {
+function HeroCarousel() {
   const [index, setIndex] = useState<number>(0);
   const timerRef = useRef<number | null>(null);
 
@@ -303,7 +336,7 @@ function HeroCarousel(): JSX.Element {
 }
 
 type SectionHeaderProps = { title: string; subtitle?: string; right?: React.ReactNode };
-function SectionHeader({ title, subtitle, right }: SectionHeaderProps): JSX.Element {
+function SectionHeader({ title, subtitle, right }: SectionHeaderProps) {
   return (
     <div className="flex items-end justify-between">
       <div>
@@ -315,7 +348,7 @@ function SectionHeader({ title, subtitle, right }: SectionHeaderProps): JSX.Elem
   );
 }
 
-function ProductCard({ p }: { p: Product }): JSX.Element {
+function ProductCard({ p }: { p: Product }) {
   const discounted = Math.round(p.price * (1 - p.sale / 100));
   return (
     <motion.a
@@ -357,7 +390,7 @@ function ProductCard({ p }: { p: Product }): JSX.Element {
 }
 
 type SortKey = "best" | "new" | "low" | "high";
-function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }): JSX.Element {
+function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => void }) {
   const tabs: { id: SortKey; label: string }[] = [
     { id: "best", label: "인기순" },
     { id: "new", label: "신상품" },
@@ -379,29 +412,53 @@ function SortTabs({ sort, setSort }: { sort: SortKey; setSort: (v: SortKey) => v
   );
 }
 
-function DealsGrid({ query }: { query: string }): JSX.Element {
+function DealsGrid({ query }: { query: string }) {
   const [sort, setSort] = useState<SortKey>("best");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const list = useMemo(() => {
-    let arr = [...MOCK_PRODUCTS];
-    if (query) {
-      const q = query.trim().toLowerCase();
-      arr = arr.filter((p) => `${p.brand} ${p.name}`.toLowerCase().includes(q));
-    }
-    switch (sort) {
-      case "new":
-        arr.reverse();
-        break;
-      case "low":
-        arr.sort((a, b) => a.price * (1 - a.sale / 100) - b.price * (1 - b.sale / 100));
-        break;
-      case "high":
-        arr.sort((a, b) => b.price * (1 - b.sale / 100) - a.price * (1 - a.sale / 100));
-        break;
-      default:
-    }
-    return arr;
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const data = await productService.getProducts(sort, query, 12);
+        setProducts(data);
+      } catch (error) {
+        console.error('상품 목록 조회 실패:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, [sort, query]);
+
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-screen-2xl px-4">
+        <div className="mb-4">
+          <SectionHeader
+            title="오늘의 딜"
+            subtitle="실시간 베스트를 모아봤어요"
+            right={<SortTabs sort={sort} setSort={setSort} />}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-square bg-gray-200 rounded-2xl mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto max-w-screen-2xl px-4">
@@ -414,7 +471,7 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-        {list.map((p) => (
+        {products.map((p) => (
           <ProductCard key={p.id} p={p} />
         ))}
       </div>
@@ -422,7 +479,7 @@ function DealsGrid({ query }: { query: string }): JSX.Element {
   );
 }
 
-function PromoTiles(): JSX.Element {
+function PromoTiles() {
   const tiles = [
     { id: 1, title: "슈퍼세일", desc: "카테고리 쿠폰 매일 지급", img: "https://picsum.photos/seed/sale/600/400" },
     { id: 2, title: "여행 특가", desc: "티켓/여행 최대 30%", img: "https://picsum.photos/seed/travel/600/400" },
@@ -460,7 +517,7 @@ function PromoTiles(): JSX.Element {
   );
 }
 
-function Footer(): JSX.Element {
+function Footer() {
   return (
     <footer className="mt-16 border-t bg-gray-50">
       <div className="mx-auto max-w-screen-2xl px-4 py-10 grid gap-6 md:grid-cols-4">
@@ -499,12 +556,17 @@ function Footer(): JSX.Element {
   );
 }
 
-export default function ElevenStreetHome(): JSX.Element {
+type ElevenStreetHomeProps = {
+  navigateTo?: (path: string) => void;
+};
+
+export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps) {
   const [query, setQuery] = useState<string>("");
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-900">
       <TopNotice />
-      <Header query={query} setQuery={setQuery} />
+      <Header query={query} setQuery={setQuery} navigateTo={navigateTo} />
       <main className="space-y-10 md:space-y-14">
         <HeroCarousel />
         <PromoTiles />

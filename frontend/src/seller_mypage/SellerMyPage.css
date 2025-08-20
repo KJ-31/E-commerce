@@ -1,0 +1,1118 @@
+/* SellerMyPage.css */
+
+/* 기본 스타일 리셋 및 변수 정의 */
+:root {
+  --color-primary: #f43f5e;
+  --color-primary-dark: #e11d48;
+  --color-primary-light: #fda4af;
+  --color-secondary: #1e293b;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --color-purple: #8b5cf6;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --transition: all 0.2s ease;
+}
+
+/* 전체 페이지 스타일 */
+.seller-mypage {
+  min-height: 100vh;
+  background-color: var(--color-gray-50);
+}
+
+/* 헤더 스타일 */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: white;
+  border-bottom: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.seller-badge {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.icon-button {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.icon-button:hover {
+  background-color: var(--color-gray-100);
+}
+
+.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-gray-600);
+}
+
+.icon-small {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-primary);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  width: 2rem;
+  height: 2rem;
+  background-color: #fce7f3;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-800);
+}
+
+.logout-button {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.logout-button:hover {
+  color: var(--color-gray-700);
+}
+
+/* 메인 컨테이너 */
+.main-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+/* 판매자 정보 카드 */
+.seller-info-card {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #ec4899 100%);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  color: white;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.seller-info-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.seller-info-left {
+  flex: 1;
+}
+
+.greeting-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.greeting-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 1rem;
+}
+
+.stats-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.seller-grade-card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  min-width: 100px;
+}
+
+.grade-label {
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.grade-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* 탭 컨테이너 */
+.tabs-container {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.tab-button {
+  padding: 1rem 1.5rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition);
+}
+
+.tab-button:hover {
+  color: var(--color-primary);
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: var(--color-primary);
+}
+
+.tab-content {
+  padding: 1.5rem;
+}
+
+/* 필터 섹션 */
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.date-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.date-input,
+.select-input,
+.form-input {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.date-input:focus,
+.select-input:focus,
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* 버튼 스타일 */
+.primary-button {
+  padding: 0.5rem 1.5rem;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.primary-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.primary-button.disabled {
+  background-color: var(--color-gray-400);
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  padding: 0.5rem 1rem;
+  background-color: white;
+  color: var(--color-gray-700);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.secondary-button:hover {
+  background-color: var(--color-gray-50);
+}
+
+/* 통계 그리드 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+}
+
+.stat-card-blue {
+  background-color: #dbeafe;
+}
+
+.stat-card-green {
+  background-color: #d1fae5;
+}
+
+.stat-card-purple {
+  background-color: #e9d5ff;
+}
+
+.stat-card-orange {
+  background-color: #fed7aa;
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stat-card-blue .stat-card-title,
+.stat-card-blue .stat-card-icon {
+  color: var(--color-info);
+}
+
+.stat-card-green .stat-card-title,
+.stat-card-green .stat-card-icon {
+  color: var(--color-success);
+}
+
+.stat-card-purple .stat-card-title,
+.stat-card-purple .stat-card-icon {
+  color: var(--color-purple);
+}
+
+.stat-card-orange .stat-card-title,
+.stat-card-orange .stat-card-icon {
+  color: #ea580c;
+}
+
+.stat-card-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.stat-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+}
+
+.stat-card-change {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+  margin-top: 0.25rem;
+}
+
+/* 테이블 스타일 */
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background-color: var(--color-gray-50);
+}
+
+.data-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--color-gray-50);
+}
+
+.price-cell {
+  font-weight: 500;
+}
+
+.date-cell {
+  color: var(--color-gray-500);
+}
+
+/* 상태 배지 */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+}
+
+.badge-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-primary {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.pagination-button {
+  padding: 0.5rem 0.75rem;
+  background-color: white;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.875rem;
+}
+
+.pagination-button:hover {
+  background-color: var(--color-gray-50);
+}
+
+.pagination-button.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* 상품 관련 스타일 */
+.products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.products-filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-input {
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-gray-400);
+}
+
+.products-count {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+}
+
+.count-highlight {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.product-card {
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.product-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.product-card.soldout {
+  opacity: 0.6;
+}
+
+.product-image-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  background-color: var(--color-gray-100);
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card.soldout .product-image {
+  filter: grayscale(1);
+}
+
+.product-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+.product-badge-active {
+  background-color: var(--color-success);
+}
+
+.product-badge-low {
+  background-color: var(--color-warning);
+}
+
+.product-badge-soldout {
+  background-color: var(--color-gray-500);
+}
+
+.product-info {
+  padding: 1rem;
+}
+
+.product-name {
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.detail-label {
+  color: var(--color-gray-500);
+}
+
+.detail-value {
+  font-weight: 500;
+  color: var(--color-gray-900);
+}
+
+.stock-safe {
+  color: var(--color-info);
+}
+
+.stock-warning {
+  color: var(--color-warning);
+}
+
+.stock-danger {
+  color: var(--color-danger);
+}
+
+.product-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.product-actions button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* 폼 스타일 */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-section {
+  background-color: var(--color-gray-50);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+}
+
+.form-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--color-primary);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.form-input {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.form-textarea {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  resize: vertical;
+  min-height: 120px;
+  transition: var(--transition);
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.price-input-wrapper {
+  position: relative;
+}
+
+.price-prefix {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-500);
+}
+
+.price-input {
+  padding-left: 2rem;
+}
+
+/* 업로드 영역 */
+.upload-area {
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.upload-area:hover {
+  border-color: var(--color-primary);
+  background-color: rgba(244, 63, 94, 0.02);
+}
+
+.upload-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.5rem;
+  color: var(--color-gray-400);
+}
+
+.upload-text {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+}
+
+.upload-hint {
+  font-size: 0.75rem;
+  color: var(--color-gray-400);
+  margin-top: 0.25rem;
+}
+
+.file-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.upload-thumbnail {
+  aspect-ratio: 1;
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.upload-thumbnail:hover {
+  border-color: var(--color-primary);
+}
+
+.upload-thumbnail-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--color-gray-400);
+}
+
+/* 추가 옵션 */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border-radius: var(--radius-md);
+}
+
+.option-info {
+  flex: 1;
+}
+
+.option-title {
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin-bottom: 0.25rem;
+}
+
+.option-description {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+}
+
+/* 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-gray-200);
+  transition: var(--transition);
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: var(--transition);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--color-primary);
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* 폼 액션 버튼 */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.form-actions button {
+  padding: 0.75rem 2rem;
+  font-weight: 500;
+}
+
+/* 플로팅 액션 버튼 */
+.floating-actions {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.floating-button {
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: white;
+  border: 2px solid var(--color-gray-200);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow-lg);
+}
+
+.floating-button:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+}
+
+.floating-button.primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.floating-button.primary .icon {
+  color: white;
+}
+
+.floating-button:hover .icon {
+  color: var(--color-primary);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .stats-row {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .stat-item {
+    flex: 1 1 40%;
+  }
+
+  .quick-buttons {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
+  .date-filter {
+    flex-direction: column;
+  }
+
+  .products-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .products-filters {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid,
+  .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    min-width: 600px;
+  }
+
+  .seller-info-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .seller-grade-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    padding: 0 0.5rem;
+  }
+
+  .logo {
+    font-size: 1.25rem;
+  }
+
+  .seller-badge {
+    display: none;
+  }
+
+  .greeting-title {
+    font-size: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .tabs-header {
+    overflow-x: auto;
+  }
+
+  .tab-button {
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+  }
+
+  .floating-actions {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .floating-button {
+    width: 3rem;
+    height: 3rem;
+  }
+}
