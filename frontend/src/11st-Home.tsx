@@ -103,6 +103,69 @@ function TopNotice() {
   );
 }
 
+function FeaturedProductsGrid({ navigateTo }: { navigateTo: (path: string) => void }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeaturedProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await productService.getFeaturedProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching featured products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="mx-auto max-w-screen-2xl px-4">
+        <div className="mb-4">
+          <SectionHeader title="추천 상품" subtitle="지금 가장 인기 있는 상품들을 만나보세요" />
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="aspect-square bg-gray-200 rounded-2xl mb-3"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded"></div>
+                <div className="h-6 bg-gray-200 rounded"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mx-auto max-w-screen-2xl px-4">
+      <div className="mb-4">
+        <SectionHeader title="추천 상품" subtitle="지금 가장 인기 있는 상품들을 만나보세요" />
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+        {products.length > 0 ? (
+          products.map((p) => (
+            <ProductCard key={p.id} p={p} navigateTo={navigateTo} />
+          ))
+        ) : (
+          <div className="col-span-full text-center py-8 text-gray-500">
+            추천 상품이 없습니다.
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 type HeaderProps = { 
   query: string; 
   setQuery: React.Dispatch<React.SetStateAction<string>>;
@@ -696,6 +759,7 @@ export default function ElevenStreetHome({ navigateTo }: ElevenStreetHomeProps) 
         <HeroCarousel />
         <PromoTiles />
         <DealsGrid query={query} navigateTo={navigateTo} />
+        <FeaturedProductsGrid navigateTo={navigateTo} />
       </main>
       <Footer />
     </div>
