@@ -1,4 +1,5 @@
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, HttpException, HttpStatus } from '@nestjs/common'; // Modified
+import { AuthGuard } from '@nestjs/passport'; // New import
 import { AuthService, SignUpDto, SellerSignUpDto, LoginDto } from './auth.service';
 
 export class SignUpDto {
@@ -40,4 +41,10 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     return await this.authService.login(loginDto);
   }
+
+  @UseGuards(AuthGuard('jwt')) // New line
+  @Get('profile') // New line
+  getProfile(@Request() req) { // New line
+    return req.user; // New line
+  } // New line
 }

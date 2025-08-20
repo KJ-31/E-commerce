@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-type UserType = 'user' | 'seller' | null;
+type UserType = 'general' | 'seller' | null;
 
 interface UserInfo {
   user_id: number;
@@ -13,10 +13,13 @@ interface UserInfo {
 interface AuthContextType {
   isLoggedIn: boolean;
   userType: UserType;
+    
+  token: string | null;
   userInfo: UserInfo | null;
+
   login: (email: string, password: string, type?: UserType) => Promise<boolean>;
+    
   logout: () => void;
-  restoreSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,66 +37,31 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userType, setUserType] = useState<UserType>(null);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-
-  // 세션 복구
-  const restoreSession = () => {
-    try {
-      const savedUserInfo = sessionStorage.getItem('userInfo');
-      const savedUserType = sessionStorage.getItem('userType');
-      if (savedUserInfo && savedUserType) {
-        setIsLoggedIn(true);
-        setUserInfo(JSON.parse(savedUserInfo));
-        setUserType(savedUserType as UserType);
-      }
-    } catch (error) {
-      console.error('세션 복구 실패:', error);
-    }
-  };
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    restoreSession();
+    const storedToken = localStorage.getItem('token');
+    const storedUserType = localStorage.getItem('userType') as UserType;
+    if (storedToken && storedUserType) {
+      setIsLoggedIn(true);
+      setToken(storedToken);
+      setUserType(storedUserType);
+    }
   }, []);
 
-  // API 기반 로그인
-  const login = async (email: string, password: string, type: UserType = 'user') => {
-    try {
-      const response = await fetch(`http://localhost:3001/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, userType: type }),
-      });
-
-      if (!response.ok) return false;
-
-      const result = await response.json();
-      const data = result.data.user;
-
-      const userInfo: UserInfo = {
-        user_id: data.id || data.user_id,
-        email: data.email,
-        user_name: data.name || data.user_name,
-        user_addr: data.user_addr,
-        user_phone_num: data.user_phone_num,
-      };
-
-      setIsLoggedIn(true);
-      setUserType(type);
-      setUserInfo(userInfo);
-
-      // 세션 저장
-      sessionStorage.setItem('userInfo', JSON.stringify(userInfo));
-      sessionStorage.setItem('userType', type);
-
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    }
+  const login = (type: UserType, token: string) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userType', type || '');
+    setIsLoggedIn(true);
+    setToken(token);
+    setUserType(type);
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userType');
     setIsLoggedIn(false);
+    setToken(null);
     setUserType(null);
     setUserInfo(null);
     sessionStorage.removeItem('userInfo');
@@ -101,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, userType, userInfo, login, logout, restoreSession }}>
+    <AuthContext.Provider value={{ isLoggedIn, userType, userInfo, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

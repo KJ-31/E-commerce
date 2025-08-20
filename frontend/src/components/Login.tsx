@@ -7,6 +7,7 @@ type LoginProps = {
 };
 
 type Form = { id: string; pw: string; keep: boolean };
+type Errors = { id?: string; pw?: string };
 
 function Logo() {
   return (
@@ -30,18 +31,34 @@ function SocialIcon({ children, label }: { children: React.ReactNode; label: str
 }
 
 const Login: React.FC<LoginProps> = ({ navigateTo }) => {
-  const [userType, setUserType] = useState<'user' | 'seller'>('user');
+  const [userType, setUserType] = useState<'general' | 'seller'>('general');
   const [form, setForm] = useState<Form>({ id: '', pw: '', keep: false });
   const [showPw, setShowPw] = useState(false);
+  const [errors, setErrors] = useState<Errors>({});
   const { login } = useAuth();
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setForm((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
+    if (errors[name as keyof Errors]) {
+      setErrors((p) => ({ ...p, [name]: undefined }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors: Errors = {};
+    if (!form.id) newErrors.id = '아이디를 입력해주세요.';
+    if (!form.pw) newErrors.pw = '비밀번호를 입력해주세요.';
+    return newErrors;
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
     
     try {
       // AuthContext의 login 함수 사용 (이미 모든 로직이 포함되어 있음)
@@ -62,9 +79,12 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
 
       if (response.ok) {
         const data = await response.json();
-        // 로그인 성공 시 AuthContext 업데이트 (사용자 정보 포함)
-        login(userType, data.user);
-        alert('로그인 성공!');
+
+        if (data.accessToken) {
+          login(userType, data.accessToken);
+          navigateTo?.('/');
+        } else {
+          alert('로그인에 성공했으나 토큰을 받지 못했습니다.');
         
         // 판매자인 경우 판매자 마이페이지로, 일반 사용자는 홈으로
         if (userType === 'seller') {
@@ -93,9 +113,9 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
               <div className="flex mt-6 mb-4">
                 <button
                   type="button"
-                  onClick={() => setUserType('user')}
+                  onClick={() => setUserType('general')}
                   className={`flex-1 py-2 px-4 rounded-l-lg border ${
-                    userType === 'user'
+                    userType === 'general'
                       ? 'bg-rose-500 text-white border-rose-500'
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
                   }`}
@@ -116,32 +136,34 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
               </div>
 
               <form onSubmit={onSubmit} className="space-y-3">
-                <div className="space-y-3">
+                <div>
                   <input
                     name="id"
                     value={form.id}
                     onChange={onChange}
                     placeholder="아이디 입력"
-                    className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
+                    className={`w-full rounded-lg border ${errors.id ? 'border-red-500' : 'border-gray-200'} bg-white px-4 py-3 text-sm outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20`}
                   />
-                  <div className="relative">
-                    <input
-                      name="pw"
-                      value={form.pw}
-                      onChange={onChange}
-                      type={showPw ? 'text' : 'password'}
-                      placeholder="비밀번호 8자~20자"
-                      className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm pr-10 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPw((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      aria-label="비밀번호 표시 전환"
-                    >
-                      {showPw ? '🙈' : '👁️'}
-                    </button>
-                  </div>
+                  {errors.id && <p className="mt-1 text-xs text-red-500">{errors.id}</p>}
+                </div>
+                <div className="relative">
+                  <input
+                    name="pw"
+                    value={form.pw}
+                    onChange={onChange}
+                    type={showPw ? 'text' : 'password'}
+                    placeholder="비밀번호 8자~20자"
+                    className={`w-full rounded-lg border ${errors.pw ? 'border-red-500' : 'border-gray-200'} bg-white px-4 py-3 text-sm pr-10 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="비밀번호 표시 전환"
+                  >
+                    {showPw ? '🙈' : '👁️'}
+                  </button>
+                  {errors.pw && <p className="mt-1 text-xs text-red-500">{errors.pw}</p>}
                 </div>
 
                 <button
@@ -153,8 +175,7 @@ const Login: React.FC<LoginProps> = ({ navigateTo }) => {
 
                 {/* 최근로그인 + 소셜 행 */}
                 <div className="mt-2">
-                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600 border border-gray-200">
-                    최근로그인
+                  <span>
                   </span>
                 </div>
 
