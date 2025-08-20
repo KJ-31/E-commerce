@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Heart, Share2, Star, Truck, ShieldCheck } from 'lucide-react';
 import { productService, Product } from '../services/productService';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -13,15 +14,20 @@ const ProductDetail: React.FC = () => {
   const [activeTab, setActiveTab] = useState('상품정보');
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchProductAndRelated = async () => {
       setLoading(true);
       setError(null);
       try {
-        const foundProduct = await productService.getProductById(parseInt(id || '0'));
+        const productId = parseInt(id || '0');
+        const foundProduct = await productService.getProductById(productId);
         if (foundProduct) {
           setProduct(foundProduct);
           setQuantity(1); // 새 상품 로드 시 수량 초기화
           setIsLiked(false); // 새 상품 로드 시 좋아요 상태 초기화
+
+          // 관련 상품 가져오기
+          const fetchedRelatedProducts = await productService.getRelatedProducts(productId);
+          setRelatedProducts(fetchedRelatedProducts);
         } else {
           setError('상품을 찾을 수 없습니다.');
         }
@@ -33,7 +39,7 @@ const ProductDetail: React.FC = () => {
       }
     };
 
-    fetchProduct();
+    fetchProductAndRelated();
   }, [id]);
 
   if (loading) {
@@ -343,26 +349,34 @@ const ProductDetail: React.FC = () => {
       {/* 관련 상품 추천 */}
       <div className="mt-12 border-t pt-8">
         <h3 className="text-xl font-bold mb-6">비슷한 상품</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1,2,3,4].map((item) => (
-            <div key={item} className="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
-              <div className="aspect-square bg-gray-100 rounded mb-3">
-                <img
-                  src={`https://images.unsplash.com/photo-151708408400${item}?w=300`}
-                  alt=""
-                  className="w-full h-full object-cover rounded"
-                />
-              </div>
-              <div className="text-sm text-gray-600 mb-1">Apple</div>
-              <div className="font-medium text-sm mb-2 line-clamp-2">
-                맥북 에어 M{item} 관련 상품
-              </div>
-              <div className="text-lg font-bold text-red-500">
-                {formatPrice(1500000 + item * 100000)}원
-              </div>
-            </div>
-          ))}
-        </div>
+        {relatedProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map((relatedProduct) => (
+              <Link to={`/product/${relatedProduct.id}`} key={relatedProduct.id} className="block">
+                <div className="border rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="aspect-square bg-gray-100 rounded mb-3 overflow-hidden">
+                    <img
+                      src={relatedProduct.img || 'https://picsum.photos/seed/default/600/600'}
+                      alt={relatedProduct.name}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">{relatedProduct.brand}</div>
+                  <div className="font-medium text-sm mb-2 line-clamp-2">
+                    {relatedProduct.name}
+                  </div>
+                  <div className="text-lg font-bold text-red-500">
+                    {formatPrice(relatedProduct.price)}원
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            비슷한 항목이 없습니다.
+          </div>
+        )}
       </div>
 
       {/* 고정 하단 구매 바 (모바일) */}

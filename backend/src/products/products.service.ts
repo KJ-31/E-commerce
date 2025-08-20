@@ -108,4 +108,37 @@ async getProductById(id: number): Promise<ProductResponseDto | undefined> {
       category: product.category?.category_name
     };
   }
+
+  async getRelatedProducts(productId: number): Promise<ProductResponseDto[]> {
+    const product = await this.productRepository.findOne({ where: { product_id: productId } });
+
+    if (!product) {
+      return [];
+    }
+
+    const relatedProducts = await this.productRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.category', 'category')
+      .where('product.category_id = :categoryId', { categoryId: product.category_id })
+      .andWhere('product.product_id != :productId', { productId: productId })
+      .limit(4) // 최대 4개의 비슷한 항목을 가져옵니다.
+      .getMany();
+
+    if (relatedProducts.length === 0) {
+      return [];
+    }
+
+    return relatedProducts.map(p => ({
+      id: p.product_id,
+      brand: p.company,
+      name: p.product_name,
+      price: parseFloat(p.product_price.toString()),
+      sale: 0,
+      rating: '4.0',
+      img: p.main_img || 'https://picsum.photos/seed/default/600/600',
+      tags: p.quantity > 0 ? ['재고있음'] : ['품절'],
+      description: p.description,
+      category: p.category?.category_name
+    }));
+  }
 }
